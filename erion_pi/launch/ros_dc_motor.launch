@@ -1,0 +1,8 @@
+<launch>
+  <node pkg="erion_pi" name="key_board" type="key_board.py" output="screen" >
+  </node>
+  <node pkg="erion_pi" name="motor_control" type="motor_control.py" >
+  </node>
+  <node pkg="erion_pi" name="ros_dc_motor" type="ros_dc_motor.py">
+  </node>
+</launch>
