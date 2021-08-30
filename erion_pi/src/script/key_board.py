@@ -1,8 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# uploads
 import rospy
 from std_msgs.msg import Int16MultiArray
 
-import sys, select, termios, tty
+import sys
+import select
+import termios
+import tty
 
 ROSCAR_MAX_ACCELL_VEL = 255
 ROSCAR_MAX_STEERING_VEL = 180
@@ -68,10 +72,12 @@ def checkSTEERINGLimitVelocity(vel):
     vel = constrain(vel, -ROSCAR_MIN_STEERING_VEL, ROSCAR_MAX_STEERING_VEL)
     return vel
 
+
 if __name__ == '__main__':
     settings = termios.tcgetattr(sys.stdin)
 
-    pub = rospy.Publisher('roscar_teleop_cmd_vel', Int16MultiArray, queue_size=10)
+    pub = rospy.Publisher('roscar_teleop_cmd_vel',
+                          Int16MultiArray, queue_size=10)
     rospy.init_node('roscar_teleop', anonymous=True)
 
     teleop_int = Int16MultiArray()
@@ -97,18 +103,20 @@ if __name__ == '__main__':
                 print(vels(target_accell_vel, target_steering_vel))
             elif key == 'a':
                 target_steering_vel -= 1
-                target_steering_vel = checkSTEERINGLimitVelocity(target_steering_vel)
+                target_steering_vel = checkSTEERINGLimitVelocity(
+                    target_steering_vel)
                 status = status + 1
                 print(vels(target_accell_vel, target_steering_vel))
             elif key == 'd':
                 target_steering_vel += 1
-                target_steering_vel = checkSTEERINGLimitVelocity(target_steering_vel)
+                target_steering_vel = checkSTEERINGLimitVelocity(
+                    target_steering_vel)
                 status = status + 1
-                print (vels(target_accell_vel, target_steering_vel))
+                print(vels(target_accell_vel, target_steering_vel))
             elif key == ' ' or key == 's':
                 target_accell_vel = 0
                 target_steering_vel = 0
-                print( vels(target_accell_vel, target_steering_vel))
+                print(vels(target_accell_vel, target_steering_vel))
             else:
                 if (key == '\x03'):
                     break
@@ -123,5 +131,3 @@ if __name__ == '__main__':
         pub.publish(teleop_int)
 
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-
-
