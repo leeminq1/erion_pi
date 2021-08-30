@@ -1,12 +1,24 @@
 #!/usr/bin/env python3
 # uploads
+# keyboard std_msgs.msg [0]: target_accell_vel  / [1] : target_steering_vel / [2] : operating mode
+# operating mode : 0:auto drvie / 1:keyboard control / 2:app control / 3: lift mode
+
+import tty
+import termios
+import select
+from firebase_admin import firestore
+from firebase_admin import credentials
+import firebase_admin
 import rospy
 from std_msgs.msg import Int16MultiArray
+from std_msgs.msg import String
 
+# version chk
 import sys
-import select
-import termios
-import tty
+print(sys.version)
+
+# firebase
+
 
 ROSCAR_MAX_ACCELL_VEL = 255
 ROSCAR_MAX_STEERING_VEL = 180
@@ -33,6 +45,18 @@ CTRL-C to quit
 e = """
 Communications Failed
 """
+
+
+# firebase func
+# get operating mode info
+def get_firebase_oper_mode():
+    db = firestore.client()
+    doc_ref = db.collection(u'pi').document(u'key')
+    doc = doc_ref.get()
+    oper_mode = doc.to_dict()['oper']
+    print("check the initial_value")
+    print(f'Document data: {oper_mode}')
+    return oper_mode
 
 
 def getKey():
@@ -76,12 +100,17 @@ def checkSTEERINGLimitVelocity(vel):
 if __name__ == '__main__':
     settings = termios.tcgetattr(sys.stdin)
 
+    # firebase init
+    cred = credentials.Certificate("erion_key.json")
+    firebase_admin.initialize_app(cred)
+    print("firebase certificated")
+
     pub = rospy.Publisher('roscar_teleop_cmd_vel',
                           Int16MultiArray, queue_size=10)
     rospy.init_node('roscar_teleop', anonymous=True)
 
     teleop_int = Int16MultiArray()
-    teleop_int.data = [0, 0]
+    teleop_int.data = [0, 0, 0]
 
     status = 0
     target_accell_vel = 0
@@ -90,6 +119,7 @@ if __name__ == '__main__':
     try:
         print(msg)
         while (1):
+            oper_mode = get_firebase_oper_mode()
             key = getKey()
             if key == 'w':
                 target_accell_vel += 1
@@ -122,6 +152,7 @@ if __name__ == '__main__':
                     break
             teleop_int.data[0] = target_accell_vel
             teleop_int.data[1] = target_steering_vel
+            teleop_int.data[2] = oper_mode
             pub.publish(teleop_int)
 
     except rospy.ROSInterruptException:
