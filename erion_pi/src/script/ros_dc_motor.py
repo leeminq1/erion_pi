@@ -60,25 +60,25 @@ def callback(msg):
 
     # keyboard control
     if f_keyboard or f_app_control:
-        if f_forward or input_value == "go":
+        if f_forward or (f_app_control and input_value == "go"):
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
             iMotor.start("forward")
             print("----keyboard forward-----")
 
-        elif f_backward or input_value == "back":
+        elif f_backward or (f_app_control and input_value == "back"):
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
             iMotor.start("backward")
             print("----keyboard backward-----")
 
-        elif f_forward_right or input_value == "right":
+        elif f_forward_right or (f_app_control and input_value == "right"):
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
             iMotor.start("forward_right")
             print("----keyboard forward - right-----")
 
-        elif f_forward_left or input_value == "left":
+        elif f_forward_left or (f_app_control and input_value == "left"):
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
             iMotor.start("forward_left")
@@ -96,7 +96,7 @@ def callback(msg):
             iMotor.start("backward_left")
             print("----keyboard backward  left-----")
 
-        elif f_vehicle_stop or input_value == "stop":
+        elif f_vehicle_stop or (f_app_control and input_value == "stop"):
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
             print("--keyboard vehicle stop--")
