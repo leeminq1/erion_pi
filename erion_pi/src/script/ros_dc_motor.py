@@ -22,8 +22,8 @@ def get_firebase_input_value():
     doc_ref = db.collection(u'pi').document(u'key')
     doc = doc_ref.get()
     input_value = doc.to_dict()['input']
-    print("check the initial_value")
-    print(f'Document data: {input_value}')
+    # print("check the initial_value")
+    # print(f'Document data: {input_value}')
     return input_value
 
 
@@ -33,13 +33,21 @@ def callback(msg):
     cmd_vel.data[2] = int(msg.data[2])
 
     input_value = get_firebase_input_value()
-    print(input_value)
+    # print(input_value)
 
     # mode detection
     f_autodrvie = cmd_vel.data[2] == 0
     f_keyboard = cmd_vel.data[2] == 1
     f_app_control = cmd_vel.data[2] == 2
     f_lift_mode = cmd_vel.data[2] == 3
+    if f_autodrvie:
+        print("autodrive mode")
+    elif f_keyboard:
+        print("keyboard mode")
+    elif f_app_control:
+        print("appcontrol mode")
+    elif f_lift_mode:
+        print("lift mode")
 
     # drive deteciton
     f_forward = (cmd_vel.data[0] > 0) and (cmd_vel.data[1] == 0)
@@ -51,8 +59,8 @@ def callback(msg):
     f_vehicle_stop = (cmd_vel.data[0] == 0) and (cmd_vel.data[1] == 0)
 
     # keyboard control
-    if f_keyboard or (f_app_control and input_value == "go"):
-        if f_forward:
+    if f_keyboard or f_app_control:
+        if f_forward or (f_app_control and input_value == "go"):
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
             iMotor.start("forward")
@@ -247,3 +255,4 @@ if __name__ == "__main__":
         pass
     finally:
         del(iMotor)
+

@@ -54,8 +54,8 @@ def get_firebase_oper_mode():
     doc_ref = db.collection(u'pi').document(u'key')
     doc = doc_ref.get()
     oper_mode = doc.to_dict()['oper']
-    print("check the initial_value")
-    print(f'Document data: {oper_mode}')
+    # print("check the initial_value")
+    # print(f'Document data: {oper_mode}')
     return oper_mode
 
 
