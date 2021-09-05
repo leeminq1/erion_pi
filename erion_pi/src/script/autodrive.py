@@ -54,9 +54,21 @@ class ObstAvoid():
             "/dkcar/sonar/0", Range, self.update_range)
         self.sub_right = rospy.Subscriber(
             "/dkcar/sonar/2", Range, self.update_range)
-        # rospy.loginfo("Sonar Subscribers set")
+        rospy.loginfo("Sonar Subscribers set")
+
+        #-------------------- camera -------------------------#
+
+        self.sub_camera = rospy.Subscriber(
+            "detections", Detection2DArray, self.update_object)
+
+       # pusblish
+        self.pub_twist = rospy.Publisher(
+            "/auto_drive_control/cmd_vel", Twist, queue_size=5)
+        rospy.loginfo("Publisher set")
+        self._message = Twist()
 
         # sonar update func
+
     def update_range(self, message):
         angle = message.field_of_view
 
@@ -72,12 +84,8 @@ class ObstAvoid():
         rospy.loginfo("Sonar array: %.1f  %.1f  %.1f" %
                       (self.range_left, self.range_center, self.range_right))
 
-       #-------------------- camera -------------------------#
-
-        self.sub_camera = rospy.Subscriber(
-            "detections", Detection2DArray, self.update_object)
-
     # camera update func
+
     def update_object(self, message):
        # structure example
         '''
@@ -102,14 +110,8 @@ class ObstAvoid():
         # set array = [id, score , size_x, size_y, x,y]
         self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
         # subscireber value info
-        rospy.loginfo('Obj_info={},{},{},{},{},{}'.format(id,score,bbox_size_x,bbox_size_y,bbox_x,bbox_y))
-
-       # pusblish
-        self.pub_twist = rospy.Publisher(
-            "/auto_drive_control/cmd_vel", Twist, queue_size=5)
-        # rospy.loginfo("Publisher set")
-
-        self._message = Twist()
+        rospy.loginfo('Obj_info={},{},{},{},{},{}'.format(
+            id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
 
     def test_run(self):
         rate = rospy.Rate(5)
@@ -191,6 +193,7 @@ class ObstAvoid():
     #         # -- update the message
     #         self._message.linear.x = break_action
     #         self._message.angular.z = steer_action
+
 
     #         # -- publish it
     #         self.pub_twist.publish(self._message)
