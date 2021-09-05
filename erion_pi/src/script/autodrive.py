@@ -102,8 +102,7 @@ class ObstAvoid():
         # set array = [id, score , size_x, size_y, x,y]
         self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
         # subscireber value info
-        rospy.loginfo(
-            f"Obj_info=[{id},{score},{bbox_size_x},{bbox_size_y},{bbox_x:.1f},{bbox_y:.1f}]")
+        rospy.loginfo('Obj_info={},{},{},{},{},{}'.format(id,score,bbox_size_x,bbox_size_y,bbox_x,bbox_y))
 
        # pusblish
         self.pub_twist = rospy.Publisher(
