@@ -59,13 +59,15 @@ class ObstAvoid():
         #-------------------- camera -------------------------#
 
         self.sub_camera = rospy.Subscriber(
-            "detections", Detection2DArray, self.update_object)
+            "/detectnet/detections", Detection2DArray, self.update_object)
 
        # pusblish
         self.pub_twist = rospy.Publisher(
             "/auto_drive_control/cmd_vel", Twist, queue_size=5)
         rospy.loginfo("Publisher set")
         self._message = Twist()
+
+        rospy.spin()
 
         # sonar update func
 
@@ -89,20 +91,21 @@ class ObstAvoid():
     def update_object(self, message):
        # structure example
         '''
-         Detection2DArray  : {
+         Detection2DArray  : [
              header
              detections : { 
                  result : { id, score, pose}
                  bbox : {center : { x,y,theta}, size_x, size_y},
                  source_img : { header, height , width , encoding , is_bigendian , step , data } 
              }
-          }
+          ]
         '''
         # msg destructure
         detections = message.detections
+        print(detections)
         # detections detections
-        id = detections.result.id
-        score = detections.result.score
+        id = detections[1].id
+        score = detections[1].score
         bbox_size_x = detections.bbox.size_x
         bbox_size_y = detections.bbox.size_y
         bbox_x = detections.bbox.center.x
@@ -110,8 +113,9 @@ class ObstAvoid():
         # set array = [id, score , size_x, size_y, x,y]
         self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
         # subscireber value info
-        rospy.loginfo('Obj_info={},{},{},{},{},{}'.format(
+        rospy.loginfo('id : {}, score : {}, box_size_x : {}, box_size_y :{} , box_x : {}, box_y : {}'.format(
             id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
+        self.test_run()
 
     def test_run(self):
         rate = rospy.Rate(5)
