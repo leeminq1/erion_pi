@@ -147,6 +147,14 @@ if __name__ == '__main__':
                 target_accell_vel = 0
                 target_steering_vel = 0
                 print(vels(target_accell_vel, target_steering_vel))
+            elif key == '0':
+                oper_mode = 0
+            elif key == '1':
+                oper_mode = 1
+            elif key == "2":
+                oper_mode = 2
+            elif key == "3":
+                oper_mode = 3
             else:
                 if (key == '\x03'):
                     break

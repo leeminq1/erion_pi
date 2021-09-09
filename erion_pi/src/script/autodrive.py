@@ -9,6 +9,7 @@ import rospy
 from vision_msgs.msg import Detection2DArray
 from sensor_msgs.msg import Range
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Int16MultiArray
 
 DIST_STEER_ENGAGE = 1.2
 DIST_BREAK = 0.4
@@ -30,7 +31,7 @@ def saturate(value, min, max):
         return(value)
 
 
-class ObstAvoid():
+class AutoDrive():
     def __init__(self):
 
         # initial value
@@ -47,6 +48,15 @@ class ObstAvoid():
         self.obj_arr = []
 
         # Subscriber
+        # ------------------mode info ----------------------#
+        self.mode_sub = rospy.Subscriber(
+            "roscar_teleop_cmd_vel", Int16MultiArray, self.update_mode)
+
+    def update_mode(self, message):
+        global f_autodrive
+        f_autodrive = message.data[2] == 0
+        rospy.loginfo("Auto_drive mode set")
+
         #-------------------- sonar -------------------------#
         self.sub_center = rospy.Subscriber(
             "/dkcar/sonar/1", Range, self.update_range)
@@ -62,10 +72,11 @@ class ObstAvoid():
             "/detectnet/detections", Detection2DArray, self.update_object)
 
        # pusblish
-        self.pub_twist = rospy.Publisher(
-            "/auto_drive_control/cmd_vel", Twist, queue_size=5)
+        self.pub_auto_cmd = rospy.Publisher(
+            "/auto_drive_control/cmd_vel", Int16MultiArray, queue_size=5)
         rospy.loginfo("Publisher set")
-        self._message = Twist()
+        self._message = Int16MultiArray()
+        self._message.data = [0, 0, 0]
 
         rospy.spin()
 
@@ -110,42 +121,56 @@ class ObstAvoid():
         bbox_size_y = detections[0].bbox.size_y
         bbox_x = detections[0].bbox.center.x
         bbox_y = detections[0].bbox.center.y
-        #set array = [id, score , size_x, size_y, x,y]
+        # set array = [id, score , size_x, size_y, x,y]
         self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
         # subscireber value info
-        rospy.loginfo('-----------------------------------------------------------')
+        rospy.loginfo(
+            '-----------------------------------------------------------')
         rospy.loginfo('id : {}, score : {}, box_size_x : {}, box_size_y :{} , box_x : {}, box_y : {}'.format(
-        id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
-        
+            id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
+
         # detect condition
         global f_person
-        f_person=self.obj_arr[0]==1;
-        # while loop command 
-        # we must break to reset f_person value 
-        while f_person:
-          self.test_run()
-          break
+        f_person = self.obj_arr[0] == 1
+        # while loop command
+        # we must break to reset f_person value
+        if f_person and f_autodrive:
+            self.test_run()
+        else:
+            rospy.loginfo("Not working")
 
     def test_run(self):
         rate = rospy.Rate(5)
         while not rospy.is_shutdown():
             # -- Get the control action
-            self._message.linear.x = 1
-            self._message.angular.z = 0
-            self.pub_twist.publish(self._message)
-            rospy.loginfo('vehicle go!!!,  accel:{}, streer:{}'.format(self._message.linear.x,self._message.angular.z))                
-            if self.range_center< 5:
-               self._message.linear.x = 0
-               self._message.angular.z = 0
-               rospy.loginfo('Object close ! vehicle stop!!')
-               break
+            self._message.data[0] = 1
+            self._message.data[1] = 0
+            self.pub_auto_cmd.publish(self._message)
+            rospy.loginfo('vehicle go!!!,  accel:{}, streer:{}'.format(
+                self._message.data[0], self._message.data[1]))
+            if self.range_center < 5:
+                self._message.data[0] = 0
+                self._message.data[1] = 0
+                self.pub_auto_cmd.publish(self._message)
+                rospy.loginfo('Object close ! vehicle stop!!')
+                break
+            elif self.range_left < 5 and self.range_center > 5:
+                self._message.data[0] = 1
+                self._message.data[1] = 1
+                self.pub_auto_cmd.publish(self._message)
+                rospy.loginfo('Obstacle left ! vehicle turn right!')
+                break
+            elif self.range_right < 5 and self.range_center > 5:
+                self._message.data[0] = 1
+                self._message.data[1] = -1
+                self.pub_auto_cmd.publish(self._message)
+                rospy.loginfo('Obstacle right ! vehicle turn right!')
+                break
             else:
-               rospy.loginfo('Object Traking Hold')
-               break
+                rospy.loginfo('Hold Tracking!!')
+                break
 
-            # -- publish it
-            self.pub_twist.publish(self._message)
-            rate.sleep()
+        rate.sleep()
 
     # def get_control_action(self):
     #     """
@@ -218,6 +243,6 @@ class ObstAvoid():
     #         rate.sleep()
 if __name__ == "__main__":
 
-    rospy.init_node('obstacle_avoid')
-    obst_avoid = ObstAvoid()
-    #obst_avoid.test_run()
+    rospy.init_node('autodrive')
+    auto_drive = AutoDrive()
+    # obst_avoid.test_run()
