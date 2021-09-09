@@ -35,9 +35,9 @@ class ObstAvoid():
 
         # initial value
         # sonar
-        self.range_center = 3
-        self.range_left = 3
-        self.range_right = 3
+        self.range_center = 6
+        self.range_left = 6
+        self.range_right = 6
 
         # auto_drive
         self._time_steer = 0
@@ -95,42 +95,56 @@ class ObstAvoid():
              header
              detections : { 
                  result : { id, score, pose}
-                 bbox : {center : { x,y,theta}, size_x, size_y},
+                 bbox : [center : { x,y,theta}, size_x, size_y]
                  source_img : { header, height , width , encoding , is_bigendian , step , data } 
              }
           ]
         '''
         # msg destructure
         detections = message.detections
-        print(detections)
+       # print(detections)
         # detections detections
-        id = detections[1].id
-        score = detections[1].score
-        bbox_size_x = detections.bbox.size_x
-        bbox_size_y = detections.bbox.size_y
-        bbox_x = detections.bbox.center.x
-        bbox_y = detections.bbox.center.y
-        # set array = [id, score , size_x, size_y, x,y]
+        id = detections[0].results[0].id
+        score = detections[0].results[0].score
+        bbox_size_x = detections[0].bbox.size_x
+        bbox_size_y = detections[0].bbox.size_y
+        bbox_x = detections[0].bbox.center.x
+        bbox_y = detections[0].bbox.center.y
+        #set array = [id, score , size_x, size_y, x,y]
         self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
         # subscireber value info
+        rospy.loginfo('-----------------------------------------------------------')
         rospy.loginfo('id : {}, score : {}, box_size_x : {}, box_size_y :{} , box_x : {}, box_y : {}'.format(
-            id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
-        self.test_run()
+        id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
+        
+        # detect condition
+        global f_person
+        f_person=self.obj_arr[0]==1;
+        # while loop command 
+        # we must break to reset f_person value 
+        while f_person:
+          self.test_run()
+          break
 
     def test_run(self):
         rate = rospy.Rate(5)
         while not rospy.is_shutdown():
             # -- Get the control action
-            if self.obj_arr[0] == 0:
-                self._message.linear.x = 1
-                self._message.angular.z = 0
-                if self.range_center < 5:
-                    self._message.linear.x = 0
-                    self._message.angular.z = 0
+            self._message.linear.x = 1
+            self._message.angular.z = 0
+            self.pub_twist.publish(self._message)
+            rospy.loginfo('vehicle go!!!,  accel:{}, streer:{}'.format(self._message.linear.x,self._message.angular.z))                
+            if self.range_center< 5:
+               self._message.linear.x = 0
+               self._message.angular.z = 0
+               rospy.loginfo('Object close ! vehicle stop!!')
+               break
+            else:
+               rospy.loginfo('Object Traking Hold')
+               break
 
             # -- publish it
             self.pub_twist.publish(self._message)
-
             rate.sleep()
 
     # def get_control_action(self):
@@ -205,6 +219,5 @@ class ObstAvoid():
 if __name__ == "__main__":
 
     rospy.init_node('obstacle_avoid')
-
     obst_avoid = ObstAvoid()
-    # obst_avoid.run()
+    #obst_avoid.test_run()
