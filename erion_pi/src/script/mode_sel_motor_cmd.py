@@ -12,6 +12,10 @@ def callback1(msg):
     # auto drive
     if msg.data[2] == 0:
         rospy.loginfo("autodrive_mode")
+        cmd_vel.data[0]=0
+        cmd_vel.data[0]=0
+        cmd_vel.data[2] = msg.data[2]
+        pub.publish(cmd_vel)
     elif msg.data[2] == 1:
         cmd_vel.data[0] = msg.data[0]
         cmd_vel.data[1] = msg.data[1]
@@ -21,8 +25,16 @@ def callback1(msg):
             msg.data[0], msg.data[1]))
     elif msg.data[2] == 2:
         rospy.loginfo("app_control_mode")
+        cmd_vel.data[0]=0
+        cmd_vel.data[0]=0
+        cmd_vel.data[2] = msg.data[2]
+        pub.publish(cmd_vel)
     elif msg.data[2] == 3:
         rospy.loginfo("lift_mode")
+        cmd_vel.data[0]=0
+        cmd_vel.data[0]=0
+        cmd_vel.data[2] = msg.data[2]
+        pub.publish(cmd_vel)
 
 
 def motor_control():

@@ -52,11 +52,6 @@ class AutoDrive():
         self.mode_sub = rospy.Subscriber(
             "roscar_teleop_cmd_vel", Int16MultiArray, self.update_mode)
 
-    def update_mode(self, message):
-        global f_autodrive
-        f_autodrive = message.data[2] == 0
-        rospy.loginfo("Auto_drive mode set")
-
         #-------------------- sonar -------------------------#
         self.sub_center = rospy.Subscriber(
             "/dkcar/sonar/1", Range, self.update_range)
@@ -81,6 +76,12 @@ class AutoDrive():
         rospy.spin()
 
         # sonar update func
+
+    def update_mode(self, message):
+        global f_autodrive
+        f_autodrive = message.data[2] == 0
+        if f_autodrive:
+            rospy.loginfo("Auto_drive mode set")
 
     def update_range(self, message):
         angle = message.field_of_view
@@ -246,3 +247,4 @@ if __name__ == "__main__":
     rospy.init_node('autodrive')
     auto_drive = AutoDrive()
     # obst_avoid.test_run()
+

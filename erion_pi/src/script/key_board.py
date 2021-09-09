@@ -117,9 +117,9 @@ if __name__ == '__main__':
     target_steering_vel = 0
 
     try:
-        print(msg)
+        oper_mode = get_firebase_oper_mode()
         while (1):
-            oper_mode = get_firebase_oper_mode()
+            
             key = getKey()
             if key == 'w':
                 target_accell_vel += 1
