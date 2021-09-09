@@ -9,14 +9,13 @@ cmd_vel.data = [0, 0, 0]
 
 
 def callback1(msg):
-
     # auto drive
     if msg.data[2] == 0:
         rospy.loginfo("autodrive_mode")
     elif msg.data[2] == 1:
         cmd_vel.data[0] = msg.data[0]
         cmd_vel.data[1] = msg.data[1]
-        cmd_vel.data[1] = msg.data[2]
+        cmd_vel.data[2] = msg.data[2]
         pub.publish(cmd_vel)
         rospy.loginfo("aceel vel {} \t angular_vel :{} \t operate_mode : Key_board_mode".format(
             msg.data[0], msg.data[1]))
