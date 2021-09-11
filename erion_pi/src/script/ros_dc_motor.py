@@ -33,7 +33,8 @@ def callback(msg):
     cmd_vel.data[2] = int(msg.data[2])
 
     input_value = get_firebase_input_value()
-    # print(input_value)
+    #input_value="None"
+    print(input_value)
 
     # mode detection
     f_autodrvie = cmd_vel.data[2] == 0

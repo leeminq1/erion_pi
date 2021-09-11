@@ -118,8 +118,9 @@ if __name__ == '__main__':
 
     try:
         oper_mode = get_firebase_oper_mode()
+        #oper_mode=1
         while (1):
-            
+           # print(oper_mode)
             key = getKey()
             if key == 'w':
                 target_accell_vel += 1
