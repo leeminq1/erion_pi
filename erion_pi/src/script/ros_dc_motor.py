@@ -233,7 +233,7 @@ class motor:
 if __name__ == "__main__":
     try:
         # firebase init
-        cred = credentials.Certificate("erion_key.json")
+        cred = credentials.Certificate("/home/ubuntu/catkin_ws/src/erion_pi/src/script/erion_key.json")
         firebase_admin.initialize_app(cred)
         print("firebase certificated")
 
