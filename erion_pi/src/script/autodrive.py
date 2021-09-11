@@ -31,7 +31,6 @@ def saturate(value, min, max):
         return(value)
 
 
-
 class AutoDrive():
     def __init__(self):
 
@@ -47,6 +46,7 @@ class AutoDrive():
 
         # camera
         self.obj_arr = []
+        self._time_detected = 0.0
 
         # Subscriber
         # ------------------mode info ----------------------#
@@ -76,14 +76,17 @@ class AutoDrive():
 
         rospy.spin()
 
-        # sonar update func
+    @property
+    def is_detected(self):
+        return(time.time() - self._time_detected < 1.0)
+
+    # sonar update func
     def update_mode(self, message):
         global f_autodrive
         f_autodrive = message.data[2] == 0
         if f_autodrive:
             rospy.loginfo("Auto_drive mode set")
 
-  
     # camera update func
 
     def update_object(self, message):
@@ -110,25 +113,19 @@ class AutoDrive():
         bbox_y = detections[0].bbox.center.y
         # set array = [id, score , size_x, size_y, x,y]
         self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
+        self._time_detected = time.time()
         # subscireber value info
         rospy.loginfo(
             '-----------------------------------------------------------')
         rospy.loginfo('id : {}, score : {}, box_size_x : {}, box_size_y :{} , box_x : {}, box_y : {}'.format(
             id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
 
-        # detect condition
-        global f_person
-        if self.obj_arr[0]==1:
-           f_person=1
-        else:
-           f_person=0
-        print("person : {}".format(f_person))
         # while loop command
         # we must break to reset f_person value
         while f_autodrive:
-           self.test_run()
-           rospy.loginfo("Working")
-           break
+            self.test_run()
+            rospy.loginfo("Working")
+            break
 
     def update_range(self, message):
         angle = message.field_of_view
@@ -142,21 +139,24 @@ class AutoDrive():
         elif angle < 0:
             self.range_left = message.range
 
-        rospy.loginfo("left : {:.2f}m , center : {:.2f}m".format(self.range_left,self.range_center))
-
+        rospy.loginfo("left : {:.2f}m , center : {:.2f}m".format(
+            self.range_left, self.range_center))
 
     def test_run(self):
         rate = rospy.Rate(2)
-        while f_autodrive:
+        while not rospy.is_shutdown():
+            # detect condition
+            global f_person
+            f_person = self.obj_arr[0] == 1 and self.is_detected
             # -- Get the control action
-            if self.range_center > 0.2 and f_person==1:
-            	self._message.data[0] = 1
-            	self._message.data[1] = 0
-            	self.pub_auto_cmd.publish(self._message)
-            	rospy.loginfo('vehicle go!!!,  accel:{}, streer:{}'.format(
-                self._message.data[0], self._message.data[1]))
+            if self.range_center > 0.2 and f_person == 1:
+                self._message.data[0] = 1
+                self._message.data[1] = 0
+                self.pub_auto_cmd.publish(self._message)
+                rospy.loginfo('vehicle go!!!,  accel:{}, streer:{}'.format(
+                    self._message.data[0], self._message.data[1]))
                 break
-            elif self.range_center < 0.15 or f_person==0:
+            elif self.range_center < 0.15 or f_person == 0:
                 self._message.data[0] = 0
                 self._message.data[1] = 0
                 self.pub_auto_cmd.publish(self._message)
@@ -245,7 +245,6 @@ class AutoDrive():
     #         self._message.linear.x = break_action
     #         self._message.angular.z = steer_action
 
-
     #         # -- publish it
     #         self.pub_twist.publish(self._message)
     #         rate.sleep()
@@ -254,4 +253,3 @@ if __name__ == "__main__":
     rospy.init_node('autodrive')
     auto_drive = AutoDrive()
    # auto_drive.test_run()
-
