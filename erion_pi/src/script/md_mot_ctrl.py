@@ -32,11 +32,13 @@ def get_firebase_input_value():
 
 
 def callback(msg):
+    print("get msg")
     cmd_vel.data[0] = int(msg.data[0])
     cmd_vel.data[1] = int(msg.data[1])
     cmd_vel.data[2] = int(msg.data[2])
 
-    input_value = get_firebase_input_value()
+   # input_value = get_firebase_input_value()
+    input_value="None"
     # print(input_value)
 
     # mode detection
@@ -128,14 +130,16 @@ class motor:
     def __init__(self):
         # pin setteing
         self.pwmLPin = 12  # Jetson Nano PIN 32
-        self.pwmRPin = 21
+        self.pwmRPin = 13
         self.dirLPin = 6  # Jetson Nano PIN 31
-        self.dirRPin = 13
+        self.dirRPin = 5
+        self.brkLPin = 4
+        self.brkRPin = 17
 
         self.encLPinA = 23  # Jetson Nano PIN 16
         self.encLPinB = 24  # Jetson Nano PIN 18
-        self.encRPinA = 11
-        self.encRPinB = 25
+        self.encRPinA = 19
+        self.encRPinB = 26
 
         # GPIO SET
         GPIO.setwarnings(False)
@@ -145,18 +149,20 @@ class motor:
         GPIO.setup(self.encRPinA, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(self.encRPinB, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup([self.pwmLPin, self.pwmRPin,
-                   self.dirLPin, self.dirRPin], GPIO.OUT)
+                   self.dirLPin, self.dirRPin,self.brkLPin,self.brkRPin], GPIO.OUT)
 
-        self.pL = GPIO.PWM(self.pwmLPin, 60)  # 12pin , strength 20%
+        self.pL = GPIO.PWM(self.pwmLPin, 100)  # 12pin , strength 20%
         self.pL.start(0)
 
-        self.pR = GPIO.PWM(self.pwmRPin, 60)  # 12pin , strength 20%
+        self.pR = GPIO.PWM(self.pwmRPin, 100)  # 12pin , strength 20%
         self.pR.start(0)
 
         self.encoderLPos = 0
+        self.encoderLPos_prev=0
         self.encoderRPos = 0
-        self.cnt_LA = 0
-        self.cnt_LB = 0
+        self.encoderRPos_prev=0
+        self.pwmR = 0
+        self.pwmL = 0
 
         GPIO.add_event_detect(self.encLPinA, GPIO.BOTH,
                               callback=self.encoderLA)
@@ -209,18 +215,20 @@ class motor:
             # enc cal
             self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
             # cmd oper
-            self.pwm_right.ChangeDutyCycle(self.pwmR)
-            self.pwm_left.ChangeDutyCycle(self.pwmL)
+            self.pR.ChangeDutyCycle(min(abs(self.pwmR),100))
+            self.pL.ChangeDutyCycle(min(abs(self.pwmL),100))
             GPIO.output(self.dirLPin, True)
-            GPIO.output(self.dirRPin, True)
+            GPIO.output(self.dirRPin, False)
+            GPIO.output(self.brkLPin,False)
+            GPIO.output(self.brkRPin,False)
 
         elif setV == 'backward' and self.is_detected:
             rospy.loginfo("backward")
             # enc cal
             self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
             # cmd oper
-            self.pwm_right.ChangeDutyCycle(self.pwmR)
-            self.pwm_left.ChangeDutyCycle(self.pwmL)
+            self.pR.ChangeDutyCycle(min(abs(self.pwmR),100))
+            self.pL.ChangeDutyCycle(min(abs(self.pwmL),100))
             GPIO.output(self.dirLPin, False)
             GPIO.output(self.dirRPin, False)
 
@@ -229,8 +237,8 @@ class motor:
             # enc cal
             self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
             # cmd oper
-            self.pwm_right.ChangeDutyCycle(self.pwmR)
-            self.pwm_left.ChangeDutyCycle(self.pwmL)
+            self.pR.ChangeDutyCycle(min(abs(self.pwmR),100))
+            self.pL.ChangeDutyCycle(min(abs(self.pwmL),100))
             GPIO.output(self.dirLPin, True)
             GPIO.output(self.dirRPin, True)
 
@@ -239,8 +247,8 @@ class motor:
             # enc cal
             self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
             # cmd oper
-            self.pwm_right.ChangeDutyCycle(self.pwmR)
-            self.pwm_left.ChangeDutyCycle(self.pwmL)
+            self.pR.ChangeDutyCycle(min(abs(self.pwmR),100))
+            self.pL.ChangeDutyCycle(min(abs(self.pwmL),100))
             GPIO.output(self.dirLPin, True)
             GPIO.output(self.dirRPin, True)
 
@@ -249,8 +257,8 @@ class motor:
             # enc cal
             self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
             # cmd oper
-            self.pwm_right.ChangeDutyCycle(self.pwmR)
-            self.pwm_left.ChangeDutyCycle(self.pwmL)
+            self.pR.ChangeDutyCycle(min(abs(self.pwmR),100))
+            self.pL.ChangeDutyCycle(min(abs(self.pwmL),100))
             GPIO.output(self.dirLPin, False)
             GPIO.output(self.dirRPin, False)
 
@@ -259,8 +267,8 @@ class motor:
             # enc cal
             self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
             # cmd oper
-            self.pwm_right.ChangeDutyCycle(self.pwmR)
-            self.pwm_left.ChangeDutyCycle(self.pwmL)
+            self.pR.ChangeDutyCycle(min(abs(self.pwmR),100))
+            self.pL.ChangeDutyCycle(min(abs(self.pwmL),100))
             GPIO.output(self.dirLPin, False)
             GPIO.output(self.dirRPin, False)
 
@@ -271,10 +279,13 @@ class motor:
     def cal_pwm(self, accel, steer):
         # target basic value
         target = 10
+        # spd reset
+        #self.encoderLPos=0
+        #self.encoderRPos=0
 
         # PDI Gain
         ratio = 360/4096/3
-        Kp = 2
+        Kp = 4
         Kd = 0
         Ki = 0
         dt = 0
@@ -283,6 +294,8 @@ class motor:
         errL_prev = 0
         errR_prev = 0
         time_prev = 0
+        #self.encoderLPos_prev=0
+        #self.encoderRPos_prev=0
 
         # target cal
         # forward right
@@ -307,29 +320,40 @@ class motor:
 
         # left
         self.motorLDeg = self.encoderLPos * ratio
-        self.spdLrpm = self.encoderLPos * 60 * 1/dt_sleep * 1/4096
-        self.errL = self.target_left_motor - self.spdLrpm
+        self.encoderLPos=abs(self.encoderLPos)
+        self.spdLrpm = (self.encoderLPos-self.encoderLPos_prev) * 60 * 1/dt_sleep * 1/4096
+        self.encoderLPos_prev=self.encoderLPos
+        self.errL =abs(self.target_left_motor)-abs(self.spdLrpm)
         self.derrL = self.errL - errL_prev
         self.dtL = time.time() - time_prev
         self.controlL = Kp*self.errL + Kd*self.derrL/self.dtL + Ki*self.errL*self.dtL
 
         # right
         self.motorRDeg = self.encoderRPos * ratio
-        spdRrpm = self.encoderRPos * 60 * 1000/dt_sleep * 1/4096
-        self.errR = self.target_right_motor - spdRrpm
+        self.encoderRPos=abs(self.encoderRPos)
+        self.spdRrpm = (self.encoderRPos-self.encoderRPos_prev) * 60 * 1/dt_sleep * 1/4096
+        self.encoderRPos_prev=self.encoderRPos
+        self.errR = abs(self.target_right_motor)-abs(self.spdRrpm)
         self.derrR = self.errR - errR_prev
         self.dtR = time.time() - time_prev
         self.controlR = Kp*self.errR + Kd*self.derrR/self.dtR + Ki*self.errR*self.dtR
-
+        print("Tar_L_rpm : {}, Tar_R_rpm :{}, L_rpm : {}, R_rpm : {}, err_L:{}, err_R : {}, control_L : {}, control_R :{}".format(self.target_left_motor,self.target_right_motor,self.spdLrpm,self.spdRrpm,self.errL,self.errR,self.controlL,self.controlR))
+        print("L_encoder_delta:{}, R_encoder_delta:{}".format(self.encoderLPos-self.encoderLPos_prev,self.encoderRPos-self.encoderRPos_prev))
         return self.controlL, self.controlR
 
     def stop(self):
         if self.is_detected:
-            self.pwm_right.ChangeDutyCycle(0)
-            self.pwm_left.ChangeDutyCycle(0)
+            print("stop")
+            self.pR.ChangeDutyCycle(0)
+            self.pL.ChangeDutyCycle(0)
+            self.encoderLPos=0
+            self.encoderRPos=0
+            self.encoderLPos_prev=0
+            self.encoderRPos_prev=0
             # chk direction  / stop pin
-            GPIO.output(self.dirLPin, False)
-            GPIO.output(self.dirRPin, False)
+            GPIO.output(self.brkLPin, False)
+            GPIO.output(self.brkRPin, False)
+            
 
     def shortBreak(self):
         GPIO.output(self.GPIO_right_RP, False)
@@ -351,11 +375,13 @@ if __name__ == "__main__":
 
         rospy.init_node('rc_contorl', anonymous=True)
         rospy.loginfo("rc_car ready")
+        iMotor=motor()
         rospy.Subscriber('mode_sel_cmd_vel', Int16MultiArray, callback)
-        iMotor = motor()
+       # iMotor = motor()
         rospy.spin()
 
     except KeyboardInterrupt:
         pass
     finally:
         del(iMotor)
+

@@ -78,7 +78,8 @@ class AutoDrive():
 
     @property
     def is_detected(self):
-        return(time.time() - self._time_detected < 1.0)
+        print("time_set")
+        return(time.time() - self._time_detected < 0.5)
 
     # sonar update func
     def update_mode(self, message):
@@ -90,42 +91,33 @@ class AutoDrive():
     # camera update func
 
     def update_object(self, message):
-       # structure example
-        '''
-         Detection2DArray  : [
-             header
-             detections : { 
-                 result : { id, score, pose}
-                 bbox : [center : { x,y,theta}, size_x, size_y]
-                 source_img : { header, height , width , encoding , is_bigendian , step , data } 
-             }
-          ]
-        '''
+        self._time_detected=time.time()
+        if self.is_detected:
         # msg destructure
-        detections = message.detections
-       # print(detections)
-        # detections detections
-        id = detections[0].results[0].id
-        score = detections[0].results[0].score
-        bbox_size_x = detections[0].bbox.size_x
-        bbox_size_y = detections[0].bbox.size_y
-        bbox_x = detections[0].bbox.center.x
-        bbox_y = detections[0].bbox.center.y
+           detections = message.detections
+        # print(detections)
+         # detections detections
+           id = detections[0].results[0].id
+           score = detections[0].results[0].score
+           bbox_size_x = detections[0].bbox.size_x
+           bbox_size_y = detections[0].bbox.size_y
+           bbox_x = detections[0].bbox.center.x
+           bbox_y = detections[0].bbox.center.y
         # set array = [id, score , size_x, size_y, x,y]
-        self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
-        self._time_detected = time.time()
+           self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
+          # self._time_detected = time.time()
         # subscireber value info
-        rospy.loginfo(
+           rospy.loginfo(
             '-----------------------------------------------------------')
-        rospy.loginfo('id : {}, score : {}, box_size_x : {}, box_size_y :{} , box_x : {}, box_y : {}'.format(
-            id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
+           rospy.loginfo('time : {} , id : {}, score : {}, box_size_x : {}, box_size_y :{} , box_x : {}, box_y : {}'.format(self._time_detected,
+             id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
 
         # while loop command
         # we must break to reset f_person value
-        while f_autodrive:
-            self.test_run()
-            rospy.loginfo("Working")
-            break
+           while f_autodrive:
+               self.test_run()
+               rospy.loginfo("Working")
+               break
 
     def update_range(self, message):
         angle = message.field_of_view
