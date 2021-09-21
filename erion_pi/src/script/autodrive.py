@@ -46,6 +46,7 @@ class AutoDrive():
 
         # camera
         self.obj_arr = []
+        # time inital
         self._time_detected = 0.0
 
         # Subscriber
@@ -76,10 +77,11 @@ class AutoDrive():
 
         rospy.spin()
 
+    # update time value
     @property
     def is_detected(self):
         print("time_set")
-        return(time.time() - self._time_detected < 0.5)
+        return(time.time() - self._time_detected < 1.0)
 
     # sonar update func
     def update_mode(self, message):
@@ -87,37 +89,35 @@ class AutoDrive():
         f_autodrive = message.data[2] == 0
         if f_autodrive:
             rospy.loginfo("Auto_drive mode set")
+        else:
+            rospy.loginfo("No Condition")
 
     # camera update func
 
     def update_object(self, message):
-        self._time_detected=time.time()
-        if self.is_detected:
         # msg destructure
-           detections = message.detections
+        detections = message.detections
         # print(detections)
-         # detections detections
-           id = detections[0].results[0].id
-           score = detections[0].results[0].score
-           bbox_size_x = detections[0].bbox.size_x
-           bbox_size_y = detections[0].bbox.size_y
-           bbox_x = detections[0].bbox.center.x
-           bbox_y = detections[0].bbox.center.y
+        # detections detections
+        id = detections[0].results[0].id
+        score = detections[0].results[0].score
+        bbox_size_x = detections[0].bbox.size_x
+        bbox_size_y = detections[0].bbox.size_y
+        bbox_x = detections[0].bbox.center.x
+        bbox_y = detections[0].bbox.center.y
         # set array = [id, score , size_x, size_y, x,y]
-           self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
-          # self._time_detected = time.time()
+        self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
         # subscireber value info
-           rospy.loginfo(
-            '-----------------------------------------------------------')
-           rospy.loginfo('time : {} , id : {}, score : {}, box_size_x : {}, box_size_y :{} , box_x : {}, box_y : {}'.format(self._time_detected,
+        rospy.loginfo('-----------------------------------------------------------')
+        rospy.loginfo('time : {} , id : {}, score : {:.2f}, box_size_x : {:.2f}, box_size_y :{:.2f} , box_x : {:.2f}, box_y : {:.2f}'.format(self._time_detected,
              id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
-
+        # time update
+        self._time_detected=time.time()
         # while loop command
         # we must break to reset f_person value
-           while f_autodrive:
-               self.test_run()
-               rospy.loginfo("Working")
-               break
+        if f_autodrive and self.is_detected:
+           rospy.loginfo("Working")
+           self.test_run()
 
     def update_range(self, message):
         angle = message.field_of_view
@@ -135,40 +135,21 @@ class AutoDrive():
             self.range_left, self.range_center))
 
     def test_run(self):
-        rate = rospy.Rate(2)
-        while not rospy.is_shutdown():
-            # detect condition
-            global f_person
-            f_person = self.obj_arr[0] == 1 and self.is_detected
-            # -- Get the control action
-            if self.range_center > 0.2 and f_person == 1:
-                self._message.data[0] = 1
-                self._message.data[1] = 0
-                self.pub_auto_cmd.publish(self._message)
-                rospy.loginfo('vehicle go!!!,  accel:{}, streer:{}'.format(
-                    self._message.data[0], self._message.data[1]))
-                break
-            elif self.range_center < 0.15 or f_person == 0:
-                self._message.data[0] = 0
-                self._message.data[1] = 0
-                self.pub_auto_cmd.publish(self._message)
-                rospy.loginfo('Object close ! vehicle stop!!')
-                break
-            elif self.range_left < 5 and self.range_center > 5:
-                self._message.data[0] = 1
-                self._message.data[1] = 1
-                self.pub_auto_cmd.publish(self._message)
-                rospy.loginfo('Obstacle left ! vehicle turn right!')
-                break
-            elif self.range_right < 5 and self.range_center > 5:
-                self._message.data[0] = 1
-                self._message.data[1] = -1
-                self.pub_auto_cmd.publish(self._message)
-                rospy.loginfo('Obstacle right ! vehicle turn right!')
-                break
-            else:
-                rospy.loginfo('Hold Tracking!!')
-                break
+        rate = rospy.Rate(10)
+        # detect condition
+        global f_person
+        f_person = self.obj_arr[0] == 1
+        # -- Get the control action
+        if f_person and self.is_detected:
+           self._message.data[0] = 1
+           self._message.data[1] = 0
+           self.pub_auto_cmd.publish(self._message)
+           rospy.loginfo('vehicle go!!!,  accel:{}, streer:{}'.format(self._message.data[0], self._message.data[1]))
+        else:
+           self._message.data[0] = 0
+           self._message.data[1] = 0
+           self.pub_auto_cmd.publish(self._message)
+           rospy.loginfo("Not Detecting")
 
         rate.sleep()
 

@@ -110,15 +110,15 @@ if __name__ == '__main__':
     rospy.init_node('roscar_teleop', anonymous=True)
 
     teleop_int = Int16MultiArray()
-    teleop_int.data = [0, 0, 0]
+    teleop_int.data = [0, 0, 0, 0]
 
     status = 0
     target_accell_vel = 0
     target_steering_vel = 0
 
     try:
-        oper_mode = get_firebase_oper_mode()
-        #oper_mode=1
+       # oper_mode = get_firebase_oper_mode()
+        oper_mode=1
         while (1):
            # print(oper_mode)
             key = getKey()
@@ -162,6 +162,7 @@ if __name__ == '__main__':
             teleop_int.data[0] = target_accell_vel
             teleop_int.data[1] = target_steering_vel
             teleop_int.data[2] = oper_mode
+            teleop_int.data[3] = 0
             pub.publish(teleop_int)
 
     except rospy.ROSInterruptException:

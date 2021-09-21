@@ -32,15 +32,15 @@ def callback(msg):
     cmd_vel.data[1] = int(msg.data[1])
     cmd_vel.data[2] = int(msg.data[2])
 
-    input_value = get_firebase_input_value()
-    #input_value="None"
+   # input_value = get_firebase_input_value()
+    input_value="None"
     print(input_value)
 
     # mode detection
     f_autodrvie = cmd_vel.data[2] == 0
     f_keyboard = cmd_vel.data[2] == 1
     f_app_control = cmd_vel.data[2] == 2
-    f_lift_mode = cmd_vel.data[2] == 3
+    f_lift_mode = cmd_vel.data[2] > 3
     if f_autodrvie:
         print("autodrive mode")
     elif f_keyboard:
@@ -105,7 +105,7 @@ def callback(msg):
     elif f_autodrvie:
         print("--Auto Drive--")
     elif f_lift_mode:
-        print("--lift mode--")
+        print("--lift mode--, time : {}".format(cmd_vel.data[2]))
 
     # # app control
     # elif int(msg.data[2]) == 2:
