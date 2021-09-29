@@ -11,7 +11,9 @@ from sensor_msgs.msg import Range
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16MultiArray
 
-DIST_STEER_ENGAGE = 1.2
+DIST_FAR_RANGE = 120
+DIST_START_STEER = 60
+DIST_STOP_RANGE=20
 DIST_BREAK = 0.4
 
 DIST_LAT_ENGAGE = 0.4
@@ -36,9 +38,14 @@ class AutoDrive():
 
         # initial value
         # sonar
-        self.range_center = 6
-        self.range_left = 6
-        self.range_right = 6
+        #self.range_center = 6
+        #self.range_left = 6
+        #self.range_right = 6
+
+        # lidar
+        self.range_center = 60
+        self.range_left = 60
+        self.range_right = 60
 
         # auto_drive
         self._time_steer = 0
@@ -55,13 +62,17 @@ class AutoDrive():
             "roscar_teleop_cmd_vel", Int16MultiArray, self.update_mode)
 
         #-------------------- sonar -------------------------#
-        self.sub_center = rospy.Subscriber(
-            "/dkcar/sonar/1", Range, self.update_range)
-        self.sub_left = rospy.Subscriber(
-            "/dkcar/sonar/0", Range, self.update_range)
-        self.sub_right = rospy.Subscriber(
-            "/dkcar/sonar/2", Range, self.update_range)
-        rospy.loginfo("Sonar Subscribers set")
+        #self.sub_center = rospy.Subscriber(
+        #    "/dkcar/sonar/1", Range, self.update_range)
+        #self.sub_left = rospy.Subscriber(
+        #    "/dkcar/sonar/0", Range, self.update_range)
+        #self.sub_right = rospy.Subscriber(
+        #    "/dkcar/sonar/2", Range, self.update_range)
+        #rospy.loginfo("Sonar Subscribers set")
+
+        #-------------------- lidar -------------------------#
+        self.lidar_sub = rospy.Subscriber(
+            "/erion_scan", Int16MultiArray, self.update_lidar_range)
 
         #-------------------- camera -------------------------#
 
@@ -80,7 +91,7 @@ class AutoDrive():
     # update time value
     @property
     def is_detected(self):
-        print("time_set")
+       # print("time_set")
         return(time.time() - self._time_detected < 1.0)
 
     # sonar update func
@@ -88,9 +99,20 @@ class AutoDrive():
         global f_autodrive
         f_autodrive = message.data[2] == 0
         if f_autodrive:
-            rospy.loginfo("Auto_drive mode set")
+           rospy.loginfo("Auto_drive mode set")
         else:
-            rospy.loginfo("No Condition")
+           rospy.loginfo("No Condition")
+
+    # lidar update
+
+    def update_lidar_range(self, message):
+        range_arr = message.data
+        self.range_left = range_arr[0]
+        self.range_center = range_arr[1]
+        self.range_right = range_arr[2]
+
+        rospy.loginfo("left : {}cm , center : {}cm, right : {}cm".format(
+            self.range_left, self.range_center, self.range_right))
 
     # camera update func
 
@@ -108,31 +130,32 @@ class AutoDrive():
         # set array = [id, score , size_x, size_y, x,y]
         self.obj_arr = [id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y]
         # subscireber value info
-        rospy.loginfo('-----------------------------------------------------------')
-        rospy.loginfo('time : {} , id : {}, score : {:.2f}, box_size_x : {:.2f}, box_size_y :{:.2f} , box_x : {:.2f}, box_y : {:.2f}'.format(self._time_detected,
-             id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
+       # rospy.loginfo('-----------------------------------------------------------')
+       # rospy.loginfo('time : {} , id : {}, score : {:.2f}, box_size_x : {:.2f}, box_size_y :{:.2f} , box_x : {:.2f}, box_y : {:.2f}'.format(self._time_detected,
+#             id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
         # time update
         self._time_detected=time.time()
         # while loop command
         # we must break to reset f_person value
         if f_autodrive and self.is_detected:
-           rospy.loginfo("Working")
+        #   rospy.loginfo("Working")
            self.test_run()
+  
+    #sonar
+    #def update_range(self, message):
+    #    angle = message.field_of_view
 
-    def update_range(self, message):
-        angle = message.field_of_view
+    #    if abs(angle) > 0:
+    #        self.range_center = message.range
 
-        if abs(angle) > 0:
-            self.range_center = message.range
+    #    elif angle > 0:
+    #        self.range_right = message.range
 
-        elif angle > 0:
-            self.range_right = message.range
+    #    elif angle < 0:
+    #        self.range_left = message.range
 
-        elif angle < 0:
-            self.range_left = message.range
-
-        rospy.loginfo("left : {:.2f}m , center : {:.2f}m".format(
-            self.range_left, self.range_center))
+    #   rospy.loginfo("left : {:.2f}m , center : {:.2f}m".format(
+    #       self.range_left, self.range_center))
 
     def test_run(self):
         rate = rospy.Rate(10)
@@ -141,10 +164,10 @@ class AutoDrive():
         f_person = self.obj_arr[0] == 1
         # -- Get the control action
         if f_person and self.is_detected:
-           self._message.data[0] = 1
-           self._message.data[1] = 0
+	   accel,brk = self.estim_cmd()
+           self._message.data[0] = accel
+           self._message.data[1] = brk
            self.pub_auto_cmd.publish(self._message)
-           rospy.loginfo('vehicle go!!!,  accel:{}, streer:{}'.format(self._message.data[0], self._message.data[1]))
         else:
            self._message.data[0] = 0
            self._message.data[1] = 0
@@ -153,7 +176,66 @@ class AutoDrive():
 
         rate.sleep()
 
-    # def get_control_action(self):
+    def estim_cmd(self):
+         # Based on the current ranges / object detecting, calculate the command
+	 # init
+	 self._message.data[0] = 0
+	 self._message.data[1] = 0
+
+	 # --- Get the minimum distance
+	 range = min([self.range_center, self.range_left, self.range_right])
+
+	 # --- turn by camera
+	 f_camera_left = self.obj_arr[4] < 300
+	 f_camera_right = self.obj_arr[4] > 900
+	 f_camera_go = 300 < self.obj_arr[4] < 900
+
+	 # --- cmd by laser
+	 # stop
+	 f_laser_go = range > DIST_FAR_RANGE
+	 f_laser_stop = range < DIST_STOP_RANGE
+	 f_laser_right = (self.range_left < DIST_START_STEER) and (
+	     self.range_center > DIST_FAR_RANGE) and (self.range_right > DIST_FAR_RANGE)
+	 f_laser_right_spin = (self.range_left < DIST_START_STEER) and (
+	     self.range_center < DIST_START_STEER) and (self.range_right > DIST_FAR_RANGE)
+	 f_laser_left = (self.range_left > DIST_FAR_RANGE) and (
+	     self.range_center > DIST_FAR_RANGE) and (self.range_right < DIST_START_STEER)
+	 f_laser_left_spin = (self.range_left > DIST_FAR_RANGE) and (
+	     self.range_center < DIST_START_STEER) and (self.range_right < DIST_START_STEER)
+	 # stop
+	 if f_laser_stop:
+	     self._message.data[0] = 0
+	     self._message.data[1] = 0
+	     rospy.loginfo('Object close ! vehicle stop!!')
+	 # turn left
+	 elif f_camera_left and f_laser_left:
+	     self._message.data[0] = 1
+	     self._message.data[1] = -1
+	     rospy.loginfo('Turn left')
+	 # turn left spin
+	 elif f_camera_left and f_laser_left_spin:
+	     self._message.data[0] = 0
+	     self._message.data[1] = -1
+	     rospy.loginfo('Turn left spin')
+	 # turn right
+	 elif f_camera_right and f_laser_right:
+	     self._message.data[0] = 1
+	     self._message.data[1] = 1
+	     rospy.loginfo('Turn right')
+	 # turn left spin
+	 elif f_camera_right and f_laser_right_spin:
+	     self._message.data[0] = 0
+	     self._message.data[1] = 1
+	     rospy.loginfo('Turn right spin')
+	 # go
+	 elif f_laser_go:
+	     self._message.data[0] = 1
+	     self._message.data[1] = 0
+             rospy.loginfo('vehicle go')
+
+	 return (self._message.data[0], self._message.data[1])
+
+    #def get_control_action(self):
     #     """
     #     Based on the current ranges, calculate the command
     #     """
