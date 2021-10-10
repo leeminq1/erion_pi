@@ -61,87 +61,52 @@ def callback(msg):
 
     # drive deteciton
     f_forward = (cmd_vel.data[0] > 0) and (cmd_vel.data[1] == 0)
-    f_backward = (cmd_vel.data[0] < 0) and (cmd_vel.data[1] == 0)
+    #f_backward = (cmd_vel.data[0] < 0) and (cmd_vel.data[1] == 0)
+
     f_forward_right = (cmd_vel.data[0] > 0) and (cmd_vel.data[1] > 0)
     f_forward_left = (cmd_vel.data[0] > 0) and (cmd_vel.data[1] < 0)
-    f_backward_right = (cmd_vel.data[0] < 0) and (cmd_vel.data[1] > 0)
-    f_backward_left = (cmd_vel.data[0] < 0) and (cmd_vel.data[1] < 0)
+
+    f_right_spin = (cmd_vel.data[0] == 0) and (cmd_vel.data[1] > 0)
+    f_left_spin = (cmd_vel.data[0] == 0) and (cmd_vel.data[1] < 0)
+
     f_vehicle_stop = (cmd_vel.data[0] == 0) and (cmd_vel.data[1] == 0)
 
     # keyboard control
-    if f_keyboard:
+    if f_autodrvie:
         if f_forward:
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
             iMotor.start("forward", cmd_vel.data[0], cmd_vel.data[1])
-            print("----keyboard forward-----")
-
-        elif f_backward:
-            # rospy.loginfo("accel : {} \t angular: {}".format(
-            #     msg.data[0], msg.data[1]))
-            iMotor.start("backward", cmd_vel.data[0], cmd_vel.data[1])
-            print("----keyboard backward-----")
 
         elif f_forward_right:
             # rospy.loginfo("accel : {} \t anlsgular: {}".format(
             #     msg.data[0], msg.data[1]))
             iMotor.start("forward_right", cmd_vel.data[0], cmd_vel.data[1])
-            print("----keyboard forward - right-----")
 
         elif f_forward_left:
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
             iMotor.start("forward_left", cmd_vel.data[0], cmd_vel.data[1])
-            print("----keyboard forwad - left-----")
 
-        elif f_backward_right:
+        elif f_right_spin:
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
-            iMotor.start("backward_right", cmd_vel.data[0], cmd_vel.data[1])
-            print("----keyboard backward - right-----")
+            iMotor.start("right_spin", cmd_vel.data[0], cmd_vel.data[1])
 
-        elif f_backward_left:
+        elif f_left_spin:
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
-            iMotor.start("backward_left", cmd_vel.data[0], cmd_vel.data[1])
-            print("----keyboard backward  left-----")
+            iMotor.start("left_spin", cmd_vel.data[0], cmd_vel.data[1])
 
         elif f_vehicle_stop:
             # rospy.loginfo("accel : {} \t angular: {}".format(
             #     msg.data[0], msg.data[1]))
-            print("--keyboard vehicle stop--")
             iMotor.stop()
 
     elif f_app_control:
-        if input_value == "go":
-            # rospy.loginfo("accel : {} \t angular: {}".format(
-            #     msg.data[0], msg.data[1]))
-            iMotor.start_app("forward")
-            print("----app forward-----")
-
-        elif input_value == "back":
-            # rospy.loginfo("accel : {} \t angular: {}".format(
-            #     msg.data[0], msg.data[1]))
-            iMotor.start_app("backward")
-            print("----app backward-----")
-
-        elif input_value == "right":
-            # rospy.loginfo("accel : {} \t anlsgular: {}".format(
-            #     msg.data[0], msg.data[1]))
-            iMotor.start_app("forward_right")
-            print("----app forward - right-----")
-
-        elif input_value == "left":
-            # rospy.loginfo("accel : {} \t angular: {}".format(
-            #     msg.data[0], msg.data[1]))
-            iMotor.start_app("forward_left")
-            print("----app forwad - left-----")
-
-        elif input_value == "stop":
-            iMotor.stop()
-
-    elif f_autodrvie:
-        print("--Auto Drive--")
+        print("--app control mode--")
+    elif f_keyboard:
+        print("--key board mode--")
     elif f_lift_mode:
         print("--lift mode--")
 
@@ -242,18 +207,6 @@ class motor:
             GPIO.output(self.brkLPin, False)
             GPIO.output(self.brkRPin, False)
 
-        elif setV == 'backward' and self.is_detected:
-            rospy.loginfo("backward")
-            # enc cal
-            self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
-            # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(self.pwmR), 100))
-            self.pL.ChangeDutyCycle(min(abs(self.pwmL), 100))
-            GPIO.output(self.dirLPin, False)
-            GPIO.output(self.dirRPin, True)
-            GPIO.output(self.brkLPin, False)
-            GPIO.output(self.brkRPin, False)
-
         elif setV == 'forward_right' and self.is_detected:
             rospy.loginfo("forward-right")
             # enc cal
@@ -262,7 +215,7 @@ class motor:
             self.pR.ChangeDutyCycle(min(abs(self.pwmR), 100))
             self.pL.ChangeDutyCycle(min(abs(self.pwmL), 100))
             GPIO.output(self.dirLPin, True)
-            GPIO.output(self.dirRPin, True)
+            GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
             GPIO.output(self.brkRPin, False)
 
@@ -274,24 +227,24 @@ class motor:
             self.pR.ChangeDutyCycle(min(abs(self.pwmR), 100))
             self.pL.ChangeDutyCycle(min(abs(self.pwmL), 100))
             GPIO.output(self.dirLPin, True)
-            GPIO.output(self.dirRPin, True)
+            GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
             GPIO.output(self.brkRPin, False)
 
-        elif setV == 'backward_right' and self.is_detected:
-            rospy.loginfo("backward_right")
+        elif setV == 'right_spin' and self.is_detected:
+            rospy.loginfo("right_spin")
             # enc cal
             self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
             # cmd oper
             self.pR.ChangeDutyCycle(min(abs(self.pwmR), 100))
             self.pL.ChangeDutyCycle(min(abs(self.pwmL), 100))
-            GPIO.output(self.dirLPin, False)
-            GPIO.output(self.dirRPin, False)
+            GPIO.output(self.dirLPin, True)
+            GPIO.output(self.dirRPin, True)
             GPIO.output(self.brkLPin, False)
             GPIO.output(self.brkRPin, False)
 
-        elif setV == 'backward_left' and self.is_detected:
-            rospy.loginfo("backward_left")
+        elif setV == 'left_spin' and self.is_detected:
+            rospy.loginfo("left_spin")
             # enc cal
             self.pwmL, self.pwmR = self.cal_pwm(accel, steer)
             # cmd oper
@@ -305,47 +258,6 @@ class motor:
         else:
             print("CCW setV : setDir('forward') ")
             print("CW setV : setDir('backword') ")
-
-    def setDir_app(self, setV):
-        if setV == 'forward' and self.is_detected:
-            rospy.loginfo("forward")
-            # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(30), 100))
-            self.pL.ChangeDutyCycle(min(abs(30), 100))
-            GPIO.output(self.dirLPin, True)
-            GPIO.output(self.dirRPin, False)
-            GPIO.output(self.brkLPin, False)
-            GPIO.output(self.brkRPin, False)
-
-        elif setV == 'backward' and self.is_detected:
-            rospy.loginfo("backward")
-            # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(30), 100))
-            self.pL.ChangeDutyCycle(min(abs(30), 100))
-            GPIO.output(self.dirLPin, False)
-            GPIO.output(self.dirRPin, True)
-            GPIO.output(self.brkLPin, False)
-            GPIO.output(self.brkRPin, False)
-
-        elif setV == 'forward_right' and self.is_detected:
-            rospy.loginfo("forward-right")
-            # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(10), 100))
-            self.pL.ChangeDutyCycle(min(abs(80), 100))
-            GPIO.output(self.dirLPin, True)
-            GPIO.output(self.dirRPin, False)
-            GPIO.output(self.brkLPin, False)
-            GPIO.output(self.brkRPin, False)
-
-        elif setV == 'forward_left' and self.is_detected:
-            rospy.loginfo("forward_left")
-            # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(80), 100))
-            self.pL.ChangeDutyCycle(min(abs(10), 100))
-            GPIO.output(self.dirLPin, True)
-            GPIO.output(self.dirRPin, False)
-            GPIO.output(self.brkLPin, False)
-            GPIO.output(self.brkRPin, False)
 
     def cal_pwm(self, accel, steer):
         # target basic value
@@ -438,9 +350,6 @@ class motor:
     def start(self, setV, accel, steer):
         self.setDir(setV, accel, steer)
 
-    def start_app(self, setV):
-        self.setDir_app(setV)
-
 
 if __name__ == "__main__":
     try:
@@ -450,10 +359,11 @@ if __name__ == "__main__":
         firebase_admin.initialize_app(cred)
         print("firebase certificated")
 
-        rospy.init_node('erion_key_app_mode', anonymous=True)
-        rospy.loginfo("erion_key_app_mode")
+        rospy.init_node('erion_auto_mode', anonymous=True)
+        rospy.loginfo("erion_auto_mode")
         iMotor = motor()
-        rospy.Subscriber('mode_sel_cmd_vel', Int16MultiArray, callback)
+        rospy.Subscriber('/auto_drive_control/cmd_vel',
+                         Int16MultiArray, callback)
        # iMotor = motor()
         rospy.spin()
 

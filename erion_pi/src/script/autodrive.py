@@ -165,9 +165,9 @@ class AutoDrive():
         f_person = self.obj_arr[0] == 1
         # -- Get the control action
         if f_person and self.is_detected:
-	   accel,brk = self.estim_cmd()
+	   accel,steer = self.estim_cmd()
            self._message.data[0] = accel
-           self._message.data[1] = brk
+           self._message.data[1] = steer
            self.pub_auto_cmd.publish(self._message)
         else:
            self._message.data[0] = 0
