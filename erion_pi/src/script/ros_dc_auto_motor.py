@@ -22,6 +22,8 @@ def callback(msg):
     f_backward_right = (cmd_vel.data[0] < 0) and (cmd_vel.data[1] > 0)
     f_backward_left = (cmd_vel.data[0] < 0) and (cmd_vel.data[1] < 0)
     f_vehicle_stop = (cmd_vel.data[0] == 0) and (cmd_vel.data[1] == 0)
+    f_left_spin = (cmd_vel.data[0] == 0) and (cmd_vel.data[1] < 0)
+    f_right_spin = (cmd_vel.data[0] == 0) and (cmd_vel.data[1] > 0)
 
     # keyboard control
     if f_forward:
@@ -65,6 +67,18 @@ def callback(msg):
         #     msg.data[0], msg.data[1]))
         print("--keyboard vehicle stop--")
         iMotor.stop()
+
+    elif f_left_spin:
+        # rospy.loginfo("accel : {} \t angular: {}".format(
+        # msg.data[0], msg.data[1]))
+        iMotor.start("left_spin")
+        print("----keyboard vehicle left_spin-----")
+
+    elif f_right_spin:
+        # rospy.loginfo("accel : {} \t angular: {}".format(
+        # msg.data[0], msg.data[1]))
+        iMotor.start("right_spin")
+        print("----keyboard vehicle right_spin-----")
 
     # # app control
     # elif int(msg.data[2]) == 2:
@@ -115,8 +129,8 @@ class motor:
     def setDir(self, setV):
         if setV == 'forward':
             rospy.loginfo("forward")
-            self.pwm_right.ChangeDutyCycle(40)
-            self.pwm_left.ChangeDutyCycle(40)
+            self.pwm_right.ChangeDutyCycle(80)
+            self.pwm_left.ChangeDutyCycle(80)
             GPIO.output(self.GPIO_right_RP, True)
             GPIO.output(self.GPIO_right_RN, False)
             GPIO.output(self.GPIO_left_RP, True)
@@ -124,8 +138,8 @@ class motor:
 
         elif setV == 'backward':
             rospy.loginfo("backward")
-            self.pwm_right.ChangeDutyCycle(40)
-            self.pwm_left.ChangeDutyCycle(40)
+            self.pwm_right.ChangeDutyCycle(80)
+            self.pwm_left.ChangeDutyCycle(80)
             GPIO.output(self.GPIO_right_RP, False)
             GPIO.output(self.GPIO_right_RN, True)
             GPIO.output(self.GPIO_left_RP, False)
@@ -134,7 +148,7 @@ class motor:
         elif setV == 'forward_right':
             rospy.loginfo("forward-right")
             self.pwm_right.ChangeDutyCycle(20)
-            self.pwm_left.ChangeDutyCycle(40)
+            self.pwm_left.ChangeDutyCycle(80)
             GPIO.output(self.GPIO_right_RP, True)
             GPIO.output(self.GPIO_right_RN, False)
             GPIO.output(self.GPIO_left_RP, True)
@@ -142,7 +156,7 @@ class motor:
 
         elif setV == 'forward_left':
             rospy.loginfo("forward_left")
-            self.pwm_right.ChangeDutyCycle(40)
+            self.pwm_right.ChangeDutyCycle(80)
             self.pwm_left.ChangeDutyCycle(20)
             GPIO.output(self.GPIO_right_RP, True)
             GPIO.output(self.GPIO_right_RN, False)
@@ -166,6 +180,24 @@ class motor:
             GPIO.output(self.GPIO_right_RN, True)
             GPIO.output(self.GPIO_left_RP, False)
             GPIO.output(self.GPIO_left_RN, True)
+
+        elif setV == 'left_spin':
+            rospy.loginfo("left_spin")
+            self.pwm_right.ChangeDutyCycle(80)
+            self.pwm_left.ChangeDutyCycle(0)
+            GPIO.output(self.GPIO_right_RP, True)
+            GPIO.output(self.GPIO_right_RN, False)
+            GPIO.output(self.GPIO_left_RP, False)
+            GPIO.output(self.GPIO_left_RN, True)
+
+        elif setV == 'right_spin':
+            rospy.loginfo("right_spin")
+            self.pwm_right.ChangeDutyCycle(0)
+            self.pwm_left.ChangeDutyCycle(80)
+            GPIO.output(self.GPIO_right_RP, False)
+            GPIO.output(self.GPIO_right_RN, True)
+            GPIO.output(self.GPIO_left_RP, True)
+            GPIO.output(self.GPIO_left_RN, False)
 
         else:
             print("CCW setV : setDir('forward') ")

@@ -11,7 +11,7 @@ from sensor_msgs.msg import Range
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16MultiArray
 
-DIST_FAR_RANGE = 120
+DIST_FAR_RANGE = 80
 DIST_START_STEER = 60
 DIST_STOP_RANGE=20
 DIST_BREAK = 0.4
@@ -23,6 +23,7 @@ K_LAT_DIST_TO_STEER = 2.0
 
 TIME_KEEP_STEERING = 1.5
 
+global f_autodrive
 
 def saturate(value, min, max):
     if value <= min:
@@ -111,8 +112,8 @@ class AutoDrive():
         self.range_center = range_arr[1]
         self.range_right = range_arr[2]
 
-        rospy.loginfo("left : {}cm , center : {}cm, right : {}cm".format(
-            self.range_left, self.range_center, self.range_right))
+       # rospy.loginfo("left : {}cm , center : {}cm, right : {}cm".format(
+       #     self.range_left, self.range_center, self.range_right))
 
     # camera update func
 
@@ -132,7 +133,7 @@ class AutoDrive():
         # subscireber value info
        # rospy.loginfo('-----------------------------------------------------------')
        # rospy.loginfo('time : {} , id : {}, score : {:.2f}, box_size_x : {:.2f}, box_size_y :{:.2f} , box_x : {:.2f}, box_y : {:.2f}'.format(self._time_detected,
-#             id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
+       #      id, score, bbox_size_x, bbox_size_y, bbox_x, bbox_y))
         # time update
         self._time_detected=time.time()
         # while loop command
@@ -194,44 +195,40 @@ class AutoDrive():
 	 # stop
 	 f_laser_go = range > DIST_FAR_RANGE
 	 f_laser_stop = range < DIST_STOP_RANGE
-	 f_laser_right = (self.range_left < DIST_START_STEER) and (
-	     self.range_center > DIST_FAR_RANGE) and (self.range_right > DIST_FAR_RANGE)
-	 f_laser_right_spin = (self.range_left < DIST_START_STEER) and (
-	     self.range_center < DIST_START_STEER) and (self.range_right > DIST_FAR_RANGE)
-	 f_laser_left = (self.range_left > DIST_FAR_RANGE) and (
-	     self.range_center > DIST_FAR_RANGE) and (self.range_right < DIST_START_STEER)
-	 f_laser_left_spin = (self.range_left > DIST_FAR_RANGE) and (
-	     self.range_center < DIST_START_STEER) and (self.range_right < DIST_START_STEER)
+         f_laser_right = (self.range_right < DIST_START_STEER) and (self.range_center > DIST_START_STEER)
+         f_laser_right_spin = (self.range_right < DIST_START_STEER) and (self.range_center < DIST_START_STEER)
+         f_laser_left = (self.range_left < DIST_START_STEER) and (self.range_center >DIST_START_STEER)
+         f_laser_left_spin = (self.range_center < DIST_START_STEER) and (self.range_left < DIST_START_STEER)
 	 # stop
 	 if f_laser_stop:
 	     self._message.data[0] = 0
 	     self._message.data[1] = 0
-	     rospy.loginfo('Object close ! vehicle stop!!')
+	     rospy.loginfo('-------------Object close ! vehicle stop!!')
 	 # turn left
-	 elif f_camera_left and f_laser_left:
+	 elif f_laser_left:
 	     self._message.data[0] = 1
 	     self._message.data[1] = -1
-	     rospy.loginfo('Turn left')
+	     rospy.loginfo('-------------Turn left')
 	 # turn left spin
-	 elif f_camera_left and f_laser_left_spin:
+	 elif f_laser_left_spin:
 	     self._message.data[0] = 0
 	     self._message.data[1] = -1
-	     rospy.loginfo('Turn left spin')
+	     rospy.loginfo('------------Turn left spin')
 	 # turn right
-	 elif f_camera_right and f_laser_right:
+	 elif f_laser_right:
 	     self._message.data[0] = 1
 	     self._message.data[1] = 1
-	     rospy.loginfo('Turn right')
+	     rospy.loginfo('-----------Turn right')
 	 # turn left spin
-	 elif f_camera_right and f_laser_right_spin:
+	 elif f_laser_right_spin:
 	     self._message.data[0] = 0
 	     self._message.data[1] = 1
-	     rospy.loginfo('Turn right spin')
+	     rospy.loginfo('-----------Turn right spin')
 	 # go
 	 elif f_laser_go:
 	     self._message.data[0] = 1
 	     self._message.data[1] = 0
-             rospy.loginfo('vehicle go')
+             rospy.loginfo('----------vehicle go')
 
 	 return (self._message.data[0], self._message.data[1])
 

@@ -174,8 +174,8 @@ class motor:
 
         elif setV == 'forward_right':
             rospy.loginfo("forward-right")
-            self.pwm_right.ChangeDutyCycle(30)
-            self.pwm_left.ChangeDutyCycle(70)
+            self.pwm_right.ChangeDutyCycle(0)
+            self.pwm_left.ChangeDutyCycle(80)
             GPIO.output(self.GPIO_right_RP, True)
             GPIO.output(self.GPIO_right_RN, False)
             GPIO.output(self.GPIO_left_RP, True)
@@ -183,8 +183,8 @@ class motor:
 
         elif setV == 'forward_left':
             rospy.loginfo("forward_left")
-            self.pwm_right.ChangeDutyCycle(70)
-            self.pwm_left.ChangeDutyCycle(30)
+            self.pwm_right.ChangeDutyCycle(80)
+            self.pwm_left.ChangeDutyCycle(0)
             GPIO.output(self.GPIO_right_RP, True)
             GPIO.output(self.GPIO_right_RN, False)
             GPIO.output(self.GPIO_left_RP, True)
@@ -192,8 +192,8 @@ class motor:
 
         elif setV == 'backward_right':
             rospy.loginfo("backward_right")
-            self.pwm_right.ChangeDutyCycle(30)
-            self.pwm_left.ChangeDutyCycle(70)
+            self.pwm_right.ChangeDutyCycle(0)
+            self.pwm_left.ChangeDutyCycle(80)
             GPIO.output(self.GPIO_right_RP, False)
             GPIO.output(self.GPIO_right_RN, True)
             GPIO.output(self.GPIO_left_RP, False)
@@ -201,8 +201,8 @@ class motor:
 
         elif setV == 'backward_left':
             rospy.loginfo("backward_left")
-            self.pwm_right.ChangeDutyCycle(70)
-            self.pwm_left.ChangeDutyCycle(30)
+            self.pwm_right.ChangeDutyCycle(80)
+            self.pwm_left.ChangeDutyCycle(0)
             GPIO.output(self.GPIO_right_RP, False)
             GPIO.output(self.GPIO_right_RN, True)
             GPIO.output(self.GPIO_left_RP, False)
