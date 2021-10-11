@@ -1,1 +1,8 @@
-
+<launch>
+ <node pkg="erion_pi" name="key_board type="key_board.py output="screen" >
+ </node>
+ <node pkg="erion_pi" name="mode_sel_motor_cmd" type="mode_sel_motor_cmd.py" output="screen" ></node>
+ <node pkg="erion_pi" name="ros_md_motor" type="md_mot_ctrl.py" ></node>
+ <node pkg="erion_pi" name="autodrive" type="autodrive.py" output="screen" ></node>
+ <node pkg="erion_pi" name="ros_md_auto_motor" type="md_mot_ctrl_auto.py" ></node>
+</launch>
