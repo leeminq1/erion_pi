@@ -54,6 +54,7 @@ class AutoDrive():
 
         # camera
         self.obj_arr = []
+        self.f_time_person=1
         # time inital
         self._time_detected = 0.0
 
@@ -95,14 +96,26 @@ class AutoDrive():
        # print("time_set")
         return(time.time() - self._time_detected < 1.0)
 
+    def clock(self):
+        if (time.time()-self._time_detected > 1.2) or not self.obj_arr:
+            self.f_time_person=1
+        else:
+            self.f_time_person=0
+        return self.f_time_person
+
     # sonar update func
     def update_mode(self, message):
         global f_autodrive
         f_autodrive = message.data[2] == 0
-        if f_autodrive:
+        self.f_time_delay=self.clock()
+        if f_autodrive and not self.f_time_delay:
            rospy.loginfo("Auto_drive mode set")
-        else:
+           self.test_run()
+        elif self.f_time_delay:
            rospy.loginfo("No Condition")
+           self._message.data[0]=0
+           self._message.data[1]=0
+           self.pub_auto_cmd.publish(self._message)
 
     # lidar update
 
@@ -137,10 +150,10 @@ class AutoDrive():
         # time update
         self._time_detected=time.time()
         # while loop command
-        # we must break to reset f_person value
-        if f_autodrive and self.is_detected:
+       # # we must break to reset f_person value
+        #if f_autodrive and self.is_detected:
         #   rospy.loginfo("Working")
-           self.test_run()
+        #   self.test_run()
   
     #sonar
     #def update_range(self, message):
@@ -162,14 +175,18 @@ class AutoDrive():
         rate = rospy.Rate(10)
         # detect condition
         global f_person
-        f_person = self.obj_arr[0] == 1
+        if self.obj_arr[0]==1:
+           f_person=1
+        else:
+           f_person=0
+        #f_person = self.obj_arr[0] == 1
         # -- Get the control action
         if f_person and self.is_detected:
 	   accel,steer = self.estim_cmd()
            self._message.data[0] = accel
            self._message.data[1] = steer
            self.pub_auto_cmd.publish(self._message)
-        else:
+        elif self.f_time_delay:
            self._message.data[0] = 0
            self._message.data[1] = 0
            self.pub_auto_cmd.publish(self._message)

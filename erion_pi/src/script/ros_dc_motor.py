@@ -122,8 +122,8 @@ class motor:
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
         # pin setteing
-        self.GPIO_right_RP = 23  # IN3
-        self.GPIO_right_RN = 24  # IN4
+        self.GPIO_right_RP = 20  # IN3
+        self.GPIO_right_RN = 21  # IN4
         self.GPIO_right_EN = 12  # pwm
 
         self.GPIO_left_RP = 5  # IN1
