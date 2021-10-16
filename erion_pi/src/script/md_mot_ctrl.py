@@ -37,8 +37,8 @@ def callback(msg):
     cmd_vel.data[1] = int(msg.data[1])
     cmd_vel.data[2] = int(msg.data[2])
 
-   # input_value = get_firebase_input_value()
-    input_value = "None"
+    input_value = get_firebase_input_value()
+    #input_value = "None"
     # print(input_value)
 
     # mode detection
@@ -274,7 +274,7 @@ class motor:
             self.pR.ChangeDutyCycle(min(abs(self.pwmR), 100))
             self.pL.ChangeDutyCycle(min(abs(self.pwmL), 100))
             GPIO.output(self.dirLPin, True)
-            GPIO.output(self.dirRPin, True)
+            GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
             GPIO.output(self.brkRPin, False)
 
