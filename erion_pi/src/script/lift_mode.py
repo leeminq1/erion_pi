@@ -31,10 +31,10 @@ class lift_mode:
             # time cal
             INWEEL_TIME_END = 6
             RACK_TIME_START = 7
-            RACK_TIME_END = 13
+            RACK_TIME_END = 11
             WHL_TIME_START = RACK_TIME_END
-            WHL_TIME_END = 21
-            MODE_TIME_END = 22
+            WHL_TIME_END = 16
+            MODE_TIME_END = 18
 
             f_iw_mode = get_time < INWEEL_TIME_END
             f_rack_mode = (
@@ -138,14 +138,21 @@ class Bldc_motor:
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup([self.pwmPin, self.dirPin, self.brkPin], GPIO.OUT)
-        self.pwmPin = GPIO.PWM(self.pwmPin, 100)
-        self.pwmPin.start(0)
+        self.pwmPin = GPIO.PWM(self.pwmPin, 1000)
+        self.pwmPin.start(50)
 
     def run(self):
-        rospy.loginfo("{} drive.".format(self.bldc_name))
-        self.pwmPin.ChangeDutyCycle(100)
-        GPIO.output(self.dirPin, True)
-        GPIO.output(self.brkPin, False)
+        if self.bldc_name=="rack":
+           rospy.loginfo("{} drive.".format(self.bldc_name))
+           self.pwmPin.ChangeDutyCycle(10)
+           GPIO.output(self.dirPin, True)
+           GPIO.output(self.brkPin, False)
+        elif self.bldc_name=="whl":
+	   rospy.loginfo("{} drive.".format(self.bldc_name))
+           self.pwmPin.ChangeDutyCycle(100)
+           GPIO.output(self.dirPin, False)
+           GPIO.output(self.brkPin, False)	
+          
 
     def __del__(self):
         GPIO.cleanup()

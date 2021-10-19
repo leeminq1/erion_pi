@@ -105,10 +105,13 @@ def callback(msg):
 
     elif f_app_control:
         print("--app control mode--")
+        iMotor.stop()
     elif f_keyboard:
         print("--key board mode--")
+        iMotor.stop()
     elif f_lift_mode:
         print("--lift mode--")
+        iMotor.stop()
 
 
 class motor:
@@ -136,10 +139,10 @@ class motor:
         GPIO.setup([self.pwmLPin, self.pwmRPin,
                    self.dirLPin, self.dirRPin, self.brkLPin, self.brkRPin], GPIO.OUT)
 
-        self.pL = GPIO.PWM(self.pwmLPin, 100)  # 12pin , strength 20%
+        self.pL = GPIO.PWM(self.pwmLPin, 1000)  # 12pin , strength 20%
         self.pL.start(0)
 
-        self.pR = GPIO.PWM(self.pwmRPin, 100)  # 12pin , strength 20%
+        self.pR = GPIO.PWM(self.pwmRPin, 1000)  # 12pin , strength 20%
         self.pR.start(0)
 
         self.encoderLPos = 0
@@ -261,7 +264,7 @@ class motor:
 
     def cal_pwm(self, accel, steer):
         # target basic value
-        target = 10
+        target = 2
         # spd reset
         # self.encoderLPos=0
         # self.encoderRPos=0
@@ -331,15 +334,15 @@ class motor:
     def stop(self):
         if self.is_detected:
             print("stop")
-            self.pR.ChangeDutyCycle(0)
-            self.pL.ChangeDutyCycle(0)
+           # self.pR.ChangeDutyCycle(0)
+           # self.pL.ChangeDutyCycle(0)
             self.encoderLPos = 0
             self.encoderRPos = 0
             self.encoderLPos_prev = 0
             self.encoderRPos_prev = 0
             # chk direction  / stop pin
-            GPIO.output(self.brkLPin, False)
-            GPIO.output(self.brkRPin, False)
+            GPIO.output(self.brkLPin, True)
+            GPIO.output(self.brkRPin, True)
 
     def shortBreak(self):
         GPIO.output(self.GPIO_right_RP, False)

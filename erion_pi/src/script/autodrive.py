@@ -11,9 +11,9 @@ from sensor_msgs.msg import Range
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16MultiArray
 
-DIST_FAR_RANGE = 80
-DIST_START_STEER = 60
-DIST_STOP_RANGE=20
+DIST_FAR_RANGE = 150
+DIST_START_STEER = 100
+DIST_STOP_RANGE=25
 DIST_BREAK = 0.4
 
 DIST_LAT_ENGAGE = 0.4
@@ -205,17 +205,17 @@ class AutoDrive():
 
 	 # --- turn by camera
 	 f_camera_left = self.obj_arr[4] < 300
-	 f_camera_right = self.obj_arr[4] > 900
-	 f_camera_go = 300 < self.obj_arr[4] < 900
+	 f_camera_right = self.obj_arr[4] > 1100
+	 f_camera_go = 300 < self.obj_arr[4] < 1100
 
 	 # --- cmd by laser
 	 # stop
 	 f_laser_go = range > DIST_FAR_RANGE
 	 f_laser_stop = range < DIST_STOP_RANGE
-         f_laser_right = (self.range_right < DIST_START_STEER) and (self.range_center > DIST_START_STEER)
-         f_laser_right_spin = (self.range_right < DIST_START_STEER) and (self.range_center < DIST_START_STEER)
-         f_laser_left = (self.range_left < DIST_START_STEER) and (self.range_center >DIST_START_STEER)
-         f_laser_left_spin = (self.range_center < DIST_START_STEER) and (self.range_left < DIST_START_STEER)
+         f_laser_right = (self.range_left < DIST_START_STEER) or f_camera_right
+         f_laser_right_spin = (self.range_left < DIST_START_STEER and self.range_center <DIST_START_STEER)
+         f_laser_left = (self.range_right < DIST_START_STEER) or f_camera_left
+         f_laser_left_spin = (self.range_center < DIST_START_STEER) and (self.range_right < DIST_START_STEER)
 	 # stop
 	 if f_laser_stop:
 	     self._message.data[0] = 0

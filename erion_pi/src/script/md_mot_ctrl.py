@@ -37,8 +37,8 @@ def callback(msg):
     cmd_vel.data[1] = int(msg.data[1])
     cmd_vel.data[2] = int(msg.data[2])
 
-    input_value = get_firebase_input_value()
-    #input_value = "None"
+    #input_value = get_firebase_input_value()
+    input_value = "None"
     # print(input_value)
 
     # mode detection
@@ -142,8 +142,10 @@ def callback(msg):
 
     elif f_autodrvie:
         print("--Auto Drive--")
+        iMotor.stop()
     elif f_lift_mode:
         print("--lift mode--")
+        iMotor.stop()
 
 
 class motor:
@@ -171,10 +173,10 @@ class motor:
         GPIO.setup([self.pwmLPin, self.pwmRPin,
                    self.dirLPin, self.dirRPin, self.brkLPin, self.brkRPin], GPIO.OUT)
 
-        self.pL = GPIO.PWM(self.pwmLPin, 100)  # 12pin , strength 20%
+        self.pL = GPIO.PWM(self.pwmLPin, 1000)  # 12pin , strength 20%
         self.pL.start(0)
 
-        self.pR = GPIO.PWM(self.pwmRPin, 100)  # 12pin , strength 20%
+        self.pR = GPIO.PWM(self.pwmRPin, 1000)  # 12pin , strength 20%
         self.pR.start(0)
 
         self.encoderLPos = 0
@@ -286,7 +288,7 @@ class motor:
             self.pR.ChangeDutyCycle(min(abs(self.pwmR), 100))
             self.pL.ChangeDutyCycle(min(abs(self.pwmL), 100))
             GPIO.output(self.dirLPin, False)
-            GPIO.output(self.dirRPin, False)
+            GPIO.output(self.dirRPin, True)
             GPIO.output(self.brkLPin, False)
             GPIO.output(self.brkRPin, False)
 
@@ -298,7 +300,7 @@ class motor:
             self.pR.ChangeDutyCycle(min(abs(self.pwmR), 100))
             self.pL.ChangeDutyCycle(min(abs(self.pwmL), 100))
             GPIO.output(self.dirLPin, False)
-            GPIO.output(self.dirRPin, False)
+            GPIO.output(self.dirRPin, True)
             GPIO.output(self.brkLPin, False)
             GPIO.output(self.brkRPin, False)
 
@@ -310,8 +312,8 @@ class motor:
         if setV == 'forward' and self.is_detected:
             rospy.loginfo("forward")
             # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(30), 100))
-            self.pL.ChangeDutyCycle(min(abs(30), 100))
+            self.pR.ChangeDutyCycle(min(abs(50), 100))
+            self.pL.ChangeDutyCycle(min(abs(50), 100))
             GPIO.output(self.dirLPin, True)
             GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
@@ -320,8 +322,8 @@ class motor:
         elif setV == 'backward' and self.is_detected:
             rospy.loginfo("backward")
             # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(30), 100))
-            self.pL.ChangeDutyCycle(min(abs(30), 100))
+            self.pR.ChangeDutyCycle(min(abs(50), 100))
+            self.pL.ChangeDutyCycle(min(abs(50), 100))
             GPIO.output(self.dirLPin, False)
             GPIO.output(self.dirRPin, True)
             GPIO.output(self.brkLPin, False)
@@ -330,8 +332,8 @@ class motor:
         elif setV == 'forward_right' and self.is_detected:
             rospy.loginfo("forward-right")
             # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(10), 100))
-            self.pL.ChangeDutyCycle(min(abs(80), 100))
+            self.pR.ChangeDutyCycle(min(abs(30), 100))
+            self.pL.ChangeDutyCycle(min(abs(60), 100))
             GPIO.output(self.dirLPin, True)
             GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
@@ -340,8 +342,8 @@ class motor:
         elif setV == 'forward_left' and self.is_detected:
             rospy.loginfo("forward_left")
             # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(80), 100))
-            self.pL.ChangeDutyCycle(min(abs(10), 100))
+            self.pR.ChangeDutyCycle(min(abs(60), 100))
+            self.pL.ChangeDutyCycle(min(abs(30), 100))
             GPIO.output(self.dirLPin, True)
             GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
@@ -419,15 +421,15 @@ class motor:
     def stop(self):
         if self.is_detected:
             print("stop")
-            self.pR.ChangeDutyCycle(0)
-            self.pL.ChangeDutyCycle(0)
+           # self.pR.ChangeDutyCycle(0)
+           # self.pL.ChangeDutyCycle(0)
             self.encoderLPos = 0
             self.encoderRPos = 0
             self.encoderLPos_prev = 0
             self.encoderRPos_prev = 0
             # chk direction  / stop pin
-            GPIO.output(self.brkLPin, False)
-            GPIO.output(self.brkRPin, False)
+            GPIO.output(self.brkLPin, True)
+            GPIO.output(self.brkRPin, True)
 
     def shortBreak(self):
         GPIO.output(self.GPIO_right_RP, False)
