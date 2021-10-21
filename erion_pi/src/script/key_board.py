@@ -55,7 +55,7 @@ def get_firebase_oper_mode():
     doc = doc_ref.get()
     oper_mode = doc.to_dict()['oper']
     # print("check the initial_value")
-    # print(f'Document data: {oper_mode}')
+    print(f'Document data: {oper_mode}')
     return oper_mode
 
 
@@ -117,10 +117,11 @@ if __name__ == '__main__':
     target_steering_vel = 0
 
     try:
-       # oper_mode = get_firebase_oper_mode()
+        #oper_mode = get_firebase_oper_mode()
         oper_mode=1
         while (1):
-           # print(oper_mode)
+            #oper_mode = get_firebase_oper_mode()
+            #print(oper_mode)
             key = getKey()
             if key == 'w':
                 target_accell_vel += 1
