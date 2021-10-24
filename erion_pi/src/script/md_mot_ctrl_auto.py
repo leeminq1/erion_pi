@@ -1,10 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from std_msgs.msg import Int16MultiArray
 
-#
-import RPi.GPIO as IO
-import time
 
 # firebase
 from firebase_admin import firestore
@@ -358,20 +355,18 @@ if __name__ == "__main__":
     try:
         # firebase init
         cred = credentials.Certificate(
-            "/home/ubuntu/catkin_ws/src/erion_pi/src/script/erion_key.json")
+            "/home/ubuntu/catkin_ws/src/script/erion/erion_pi/src/script/erion_key.json")
         firebase_admin.initialize_app(cred)
         print("firebase certificated")
-
+        iMotor = motor()
         rospy.init_node('erion_auto_mode', anonymous=True)
         rospy.loginfo("erion_auto_mode")
-        iMotor = motor()
         rospy.Subscriber('/auto_drive_control/cmd_vel',
                          Int16MultiArray, callback)
-       # iMotor = motor()
         rospy.spin()
 
     except KeyboardInterrupt:
         pass
     finally:
-        del(iMotor)
+        pass
 

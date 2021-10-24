@@ -55,7 +55,7 @@ def get_firebase_oper_mode():
     doc = doc_ref.get()
     oper_mode = doc.to_dict()['oper']
     # print("check the initial_value")
-    print(f'Document data: {oper_mode}')
+    #print(f'Document data: {oper_mode}')
     return oper_mode
 
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     settings = termios.tcgetattr(sys.stdin)
 
     # firebase init
-    cred = credentials.Certificate("/home/ubuntu/catkin_ws/src/erion_pi/src/script/erion_key.json")
+    cred = credentials.Certificate("/home/ubuntu/catkin_ws/src/script/erion/erion_pi/src/script/erion_key.json")
     firebase_admin.initialize_app(cred)
     print("firebase certificated")
 
@@ -109,16 +109,16 @@ if __name__ == '__main__':
                           Int16MultiArray, queue_size=10)
     rospy.init_node('roscar_teleop', anonymous=True)
 
+
     teleop_int = Int16MultiArray()
     teleop_int.data = [0, 0, 0, 0]
-
     status = 0
     target_accell_vel = 0
     target_steering_vel = 0
 
     try:
-        #oper_mode = get_firebase_oper_mode()
-        oper_mode=1
+        oper_mode = get_firebase_oper_mode()
+        #oper_mode=1
         while (1):
             #oper_mode = get_firebase_oper_mode()
             #print(oper_mode)
