@@ -29,7 +29,7 @@ pwm_bdlc_rack_Pin.start(0)
 
 # bldc whl
 pwm_bdlc_whl_Pin = IO.PWM(pwm_bdlc_whl_Pin, 1000)  
-pwm_bdlc_rack_Pin.start(0)
+pwm_bdlc_whl_Pin.start(0)
 
 # inwhl
 pwmLPin = IO.PWM(pwmLPin, 1000)  
@@ -44,73 +44,48 @@ while True:
     try:
         ##fold     
         ##### bldc rack
-        pwm_bdlc_rack_Pin.ChangeDutyCycle(10)
+        pwm_bdlc_rack_Pin.ChangeDutyCycle(20)
     
-        # whl False ==> go to car  /  True ==> go out car
-        IO.output(dir_bldc_rack_pin, True)
-    
-        #  run/brk Pin , False ==> RUN / True ==> STOP 
-        IO.output(run_bldc_rack_pin, False)
-
-        ##### bldc whl
-        pwm_bdlc_rack_Pin.ChangeDutyCycle(50)
-    
-        # whl False ==> go to car  /  True ==> go out car
+        # False ==> fold , TRue ==> unfold
         IO.output(dir_bldc_rack_pin, False)
     
         #  run/brk Pin , False ==> RUN / True ==> STOP 
         IO.output(run_bldc_rack_pin, False)
 
-        ###### inwhl
-        pwmLPin.ChangeDutyCycle(0)
-	pwmRPin.ChangeDutyCycle(0)
-	# dir
-        # forward direction
-        IO.output(dirLPin, True)
-        IO.output(dirRPin, False)
-        # run / brk
-        IO.output(brkLPin, False)
-        IO.output(brkRPin, False)
-
-	time.sleep(4)
-        
-        #unfold
-        ##fold     
-        ##### bldc rack
-        pwm_bdlc_rack_Pin.ChangeDutyCycle(10)
+        time.sleep(7)
+       ##### bldc rack
+        pwm_bdlc_rack_Pin.ChangeDutyCycle(70)
     
-        # whl False ==> go to car  /  True ==> go out car
+        # False ==> fold , TRue ==> unfold
         IO.output(dir_bldc_rack_pin, False)
     
         #  run/brk Pin , False ==> RUN / True ==> STOP 
         IO.output(run_bldc_rack_pin, False)
-
+#        # bldc brk
+#        IO.output(run_bldc_rack_pin, True)
         ##### bldc whl
-        pwm_bdlc_rack_Pin.ChangeDutyCycle(50)
+        pwm_bdlc_whl_Pin.ChangeDutyCycle(100)
     
         # whl False ==> go to car  /  True ==> go out car
-        IO.output(dir_bldc_rack_pin, True)
+        IO.output(dir_bldc_whl_pin, False)
     
         #  run/brk Pin , False ==> RUN / True ==> STOP 
-        IO.output(run_bldc_rack_pin, False)
+        IO.output(run_bldc_whl_pin, False)
 
-        ###### inwhl
-        pwmLPin.ChangeDutyCycle(0)
-	pwmRPin.ChangeDutyCycle(0)
-	# dir
-        # backward direction
-        IO.output(dirLPin, True)
-        IO.output(dirRPin, False)
-        # run / brk
-        IO.output(brkLPin, False)
-        IO.output(brkRPin, False)
+#        ###### inwhl
+#        pwmLPin.ChangeDutyCycle(0)
+#        pwmRPin.ChangeDutyCycle(0)
+#	# dir
+#        # forward direction
+#        IO.output(dirLPin, True)
+#        IO.output(dirRPin, False)
+#        # run / brk
+#        IO.output(brkLPin, False)
+#        IO.output(brkRPin, False)
 
-
-        
-
-
-	time.sleep(100000000000)
-	
+        print("end")
+        time.sleep(111111111)
+  
 
     except KeyboardInterrupt:
         print("interrrupt")

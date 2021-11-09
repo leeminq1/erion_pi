@@ -117,8 +117,8 @@ if __name__ == '__main__':
     target_steering_vel = 0
 
     try:
-        oper_mode = get_firebase_oper_mode()
-        #oper_mode=1
+        #oper_mode = get_firebase_oper_mode()
+        oper_mode=1
         while (1):
             #oper_mode = get_firebase_oper_mode()
             #print(oper_mode)

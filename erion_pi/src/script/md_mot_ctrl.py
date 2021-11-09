@@ -309,8 +309,8 @@ class motor:
         if setV == 'forward' and self.is_detected:
             rospy.loginfo("forward")
             # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(40), 100))
-            self.pL.ChangeDutyCycle(min(abs(40), 100))
+            self.pR.ChangeDutyCycle(min(abs(20), 100))
+            self.pL.ChangeDutyCycle(min(abs(20), 100))
             GPIO.output(self.dirLPin, True)
             GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
@@ -319,8 +319,8 @@ class motor:
         elif setV == 'backward' and self.is_detected:
             rospy.loginfo("backward")
             # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(40), 100))
-            self.pL.ChangeDutyCycle(min(abs(40), 100))
+            self.pR.ChangeDutyCycle(min(abs(20), 100))
+            self.pL.ChangeDutyCycle(min(abs(20), 100))
             GPIO.output(self.dirLPin, False)
             GPIO.output(self.dirRPin, True)
             GPIO.output(self.brkLPin, False)
@@ -329,8 +329,8 @@ class motor:
         elif setV == 'forward_right' and self.is_detected:
             rospy.loginfo("forward-right")
             # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(25), 100))
-            self.pL.ChangeDutyCycle(min(abs(50), 100))
+            self.pR.ChangeDutyCycle(min(abs(10), 100))
+            self.pL.ChangeDutyCycle(min(abs(20), 100))
             GPIO.output(self.dirLPin, True)
             GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
@@ -339,8 +339,8 @@ class motor:
         elif setV == 'forward_left' and self.is_detected:
             rospy.loginfo("forward_left")
             # cmd oper
-            self.pR.ChangeDutyCycle(min(abs(50), 100))
-            self.pL.ChangeDutyCycle(min(abs(25), 100))
+            self.pR.ChangeDutyCycle(min(abs(20), 100))
+            self.pL.ChangeDutyCycle(min(abs(10), 100))
             GPIO.output(self.dirLPin, True)
             GPIO.output(self.dirRPin, False)
             GPIO.output(self.brkLPin, False)
@@ -348,7 +348,7 @@ class motor:
 
     def cal_pwm(self, accel, steer):
         # target basic value
-        target = 5
+        target = 3
         # spd reset
         # self.encoderLPos=0
         # self.encoderRPos=0
@@ -370,8 +370,8 @@ class motor:
         # target cal
         # forward right
         if accel > 0 and steer > 0:
-            self.target_left_motor = accel*target
-            self.target_right_motor = accel*0.3*target
+            self.target_left_motor = accel*0.5*target
+            self.target_right_motor = accel*0.4*target
         # forward left
         elif accel > 0 and steer < 0:
             self.target_left_motor = accel*0.3*target
